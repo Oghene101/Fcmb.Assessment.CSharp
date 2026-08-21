@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    
+    <ItemGroup>
+      <PackageReference Include="Dapper" />
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+      <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+      <PackageReference Include="Newtonsoft.Json" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <ProjectReference Include="..\Fcmb.Assessment.CSharp.Common.Application\Fcmb.Assessment.CSharp.Common.Application.csproj" />
+      <ProjectReference Include="..\Fcmb.Assessment.CSharp.Common.Domain\Fcmb.Assessment.CSharp.Common.Domain.csproj" />
+    </ItemGroup>
+
+</Project>
