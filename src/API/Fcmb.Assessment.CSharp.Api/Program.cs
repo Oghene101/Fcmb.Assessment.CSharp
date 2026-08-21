@@ -1,5 +1,6 @@
 using Fcmb.Assessment.CSharp.Api.Extensions;
 using Fcmb.Assessment.CSharp.Api.Middleware;
+using Fcmb.Assessment.CSharp.Common.Application;
 using Fcmb.Assessment.CSharp.Common.Infrastructure;
 using Fcmb.Assessment.CSharp.Modules.Transactions.Infrastructure;
 using Fcmb.Assessment.CSharp.Modules.Users.Infrastructure;
@@ -17,7 +18,8 @@ builder.Services.AddProblemDetails();
 
 builder.Services.AddOpenApiInternal();
 
-builder.Services.AddInfrastructure();
+builder.Services.AddApplication()
+    .AddInfrastructure();
 
 builder.Services.AddUsersModule(builder.Configuration);
 builder.Services.AddTransactionsModule(builder.Configuration);
