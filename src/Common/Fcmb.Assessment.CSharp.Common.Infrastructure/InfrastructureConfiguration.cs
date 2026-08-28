@@ -1,5 +1,6 @@
 using Fcmb.Assessment.CSharp.Common.Infrastructure.AuditLog;
 using Fcmb.Assessment.CSharp.Common.Infrastructure.Authentication;
+using Fcmb.Assessment.CSharp.Common.Infrastructure.Configurations;
 using Fcmb.Assessment.CSharp.Common.Infrastructure.Outbox;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -12,10 +13,12 @@ public static class InfrastructureConfiguration
     {
         public IServiceCollection AddInfrastructure()
         {
+            services.AddOptionsInternal();
+
             services.AddAuthenticationInternal();
-            
+
             services.AddSingleton(TimeProvider.System);
-            
+
             services.TryAddSingleton<InsertOutboxMessagesInterceptor>();
             services.AddScoped<InsertAuditLogsInterceptor>();
 

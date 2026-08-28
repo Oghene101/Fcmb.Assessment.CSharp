@@ -33,7 +33,7 @@ internal static class ConfigurationExtensions
                 })
                 .AddOpenApi(options =>
                 {
-                    options.Document.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
+                    options.Document.AddDocumentTransformer<OAuth2SecuritySchemeTransformer>();
 
                     options.Document.CreateSchemaReferenceId = jsonTypeInfo =>
                     {

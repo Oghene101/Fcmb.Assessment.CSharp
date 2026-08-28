@@ -1,12 +1,18 @@
-﻿using Fcmb.Assessment.CSharp.Common.Application.Messaging;
+﻿using System.Diagnostics.CodeAnalysis;
+using Fcmb.Assessment.CSharp.Common.Application.Messaging;
 using Fcmb.Assessment.CSharp.Common.Domain;
 using FluentValidation;
 using FluentValidation.Results;
+using ValidationException =
+    Fcmb.Assessment.CSharp.Common.Application.Exceptions.ValidationException;
+
 
 namespace Fcmb.Assessment.CSharp.Common.Application.Behaviors;
 
 internal static class ValidationDecorator
 {
+    [SuppressMessage("Unused", "S1144:Unused private types or members should be removed",
+        Justification = "Instantiated via DI/Scrutor assembly scanning.")]
     internal sealed class RequestHandler<TRequest, TResponse>(
         IRequestHandler<TRequest, TResponse> innerHandler,
         IEnumerable<IValidator<TRequest>> validators)

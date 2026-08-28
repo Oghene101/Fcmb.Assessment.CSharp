@@ -1,3 +1,4 @@
+using System.Reflection;
 using Fcmb.Assessment.CSharp.Common.Application.Behaviors;
 using Fcmb.Assessment.CSharp.Common.Application.Messaging;
 using FluentValidation;
@@ -9,9 +10,9 @@ public static class ApplicationConfiguration
 {
     extension(IServiceCollection services)
     {
-        public IServiceCollection AddApplication()
+        public IServiceCollection AddApplication(Assembly[] moduleAssemblies)
         {
-            services.Scan(scan => scan.FromAssembliesOf(typeof(ApplicationConfiguration))
+            services.Scan(scan => scan.FromAssemblies(moduleAssemblies)
                 .AddClasses(classes => classes.AssignableTo(typeof(IRequestHandler<>)), publicOnly: false)
                 .AsImplementedInterfaces()
                 .WithScopedLifetime()
@@ -22,15 +23,15 @@ public static class ApplicationConfiguration
             services.Decorate(typeof(IRequestHandler<,>), typeof(ValidationDecorator.RequestHandler<,>));
             services.Decorate(typeof(IRequestHandler<>), typeof(ValidationDecorator.RequestHandler<>));
 
-            // services.Decorate(typeof(IRequestHandler<,>), typeof(LoggingDecorator.CommandHandler<,>));
-            // services.Decorate(typeof(IRequestHandler<>), typeof(LoggingDecorator.CommandBaseHandler<>));
+            services.Decorate(typeof(IRequestHandler<,>), typeof(LoggingDecorator.RequestHandler<,>));
+            services.Decorate(typeof(IRequestHandler<>), typeof(LoggingDecorator.RequestHandler<>));
 
-            services.Scan(scan => scan.FromAssembliesOf(typeof(ApplicationConfiguration))
+            services.Scan(scan => scan.FromAssemblies(moduleAssemblies)
                 .AddClasses(classes => classes.AssignableTo(typeof(IDomainEventHandler<>)), publicOnly: false)
                 .AsImplementedInterfaces()
                 .WithScopedLifetime());
 
-            services.AddValidatorsFromAssembly(typeof(ApplicationConfiguration).Assembly, includeInternalTypes: true);
+            services.AddValidatorsFromAssemblies(moduleAssemblies, includeInternalTypes: true);
 
             return services;
         }

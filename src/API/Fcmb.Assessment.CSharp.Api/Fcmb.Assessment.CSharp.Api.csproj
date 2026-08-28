@@ -9,10 +9,12 @@
         </PackageReference>
         <PackageReference Include="Scalar.AspNetCore" />
         <PackageReference Include="Serilog.AspNetCore" />
+        <PackageReference Include="Serilog.Sinks.OpenTelemetry"/>
     </ItemGroup>
     
     <ItemGroup>
       <ProjectReference Include="..\..\Modules\Transactions\Fcmb.Assessment.CSharp.Modules.Transactions.Infrastructure\Fcmb.Assessment.CSharp.Modules.Transactions.Infrastructure.csproj" />
+        <ProjectReference Include="..\..\Modules\Users\Fcmb.Assessment.CSharp.Modules.Users.Application\Fcmb.Assessment.CSharp.Modules.Users.Application.csproj"/>
       <ProjectReference Include="..\..\Modules\Users\Fcmb.Assessment.CSharp.Modules.Users.Infrastructure\Fcmb.Assessment.CSharp.Modules.Users.Infrastructure.csproj" />
     </ItemGroup>
 

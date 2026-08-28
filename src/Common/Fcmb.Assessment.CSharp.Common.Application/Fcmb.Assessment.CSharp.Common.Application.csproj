@@ -4,6 +4,10 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions"/>
+      <PackageReference Include="Refit.HttpClientFactory"/>
       <PackageReference Include="Scrutor"/>
+      <PackageReference Include="Serilog"/>
+      <PackageReference Include="SerilogTimings"/>
   </ItemGroup>
 </Project>

@@ -2,10 +2,12 @@ using Fcmb.Assessment.CSharp.Api.Extensions;
 using Fcmb.Assessment.CSharp.Api.Middleware;
 using Fcmb.Assessment.CSharp.Common.Application;
 using Fcmb.Assessment.CSharp.Common.Infrastructure;
+using Fcmb.Assessment.CSharp.Common.Presentation.Extensions;
 using Fcmb.Assessment.CSharp.Modules.Transactions.Infrastructure;
 using Fcmb.Assessment.CSharp.Modules.Users.Infrastructure;
 using Scalar.AspNetCore;
 using Serilog;
+using AssemblyReference = Fcmb.Assessment.CSharp.Modules.Users.Application.AssemblyReference;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -18,8 +20,13 @@ builder.Services.AddProblemDetails();
 
 builder.Services.AddOpenApiInternal();
 
-builder.Services.AddApplication()
+builder.Services.AddApplication([
+        AssemblyReference.Assembly,
+        Fcmb.Assessment.CSharp.Modules.Transactions.Application.AssemblyReference.Assembly
+    ])
     .AddInfrastructure();
+
+builder.Configuration.AddModuleConfiguration(["users", "transactions"]);
 
 builder.Services.AddUsersModule(builder.Configuration);
 builder.Services.AddTransactionsModule(builder.Configuration);
@@ -53,34 +60,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-string[] summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-    {
-        WeatherForecast[] forecast = Enumerable.Range(1, 5).Select(index =>
-                new WeatherForecast
-                (
-                    DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-#pragma warning disable CA5394
-                    Random.Shared.Next(-20, 55),
-                    summaries[Random.Shared.Next(summaries.Length)]
-#pragma warning restore CA5394
-                ))
-            .ToArray();
-        return forecast;
-    })
-    .WithName("GetWeatherForecast");
+app.MapEndpoints();
 
 await app.RunAsync();
 
-#pragma warning disable S3903
-internal sealed record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-#pragma warning restore S3903
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
-
-//use aspire for dependencies
+//create an external requests table
+//configure standard policies to httpclients
+//integrate service bus
