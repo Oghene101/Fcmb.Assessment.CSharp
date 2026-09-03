@@ -13,4 +13,8 @@
       <ProjectReference Include="..\..\src\API\Fcmb.Assessment.CSharp.Api\Fcmb.Assessment.CSharp.Api.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <PackageReference Include="Aspire.Hosting.Keycloak"/>
+    </ItemGroup>
+
 </Project>

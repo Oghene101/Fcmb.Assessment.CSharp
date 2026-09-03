@@ -18,6 +18,6 @@ internal sealed class EmailConfiguration : IEntityTypeConfiguration<Email>
         builder
             .HasIndex(e => e.UserId)
             .IsUnique()
-            .HasFilter("[IsDeleted] = 0");
+            .HasFilter("[DeletedAt] IS NULL");
     }
 }

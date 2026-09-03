@@ -1,3 +1,4 @@
+using System.Net;
 using Fcmb.Assessment.CSharp.Common.Application.Messaging;
 using Fcmb.Assessment.CSharp.Common.Presentation;
 using Fcmb.Assessment.CSharp.Modules.Users.Application.Extensions;
@@ -27,7 +28,7 @@ internal sealed class SignUpEndpoint : IEndpoint
                 SignUpResponse result = await handler.Handle(command, cancellationToken);
 
                 Uri uri = Helper.BuildUri(context, $"{Resources.Users}/{result.UserId}");
-                return Results.Created(uri, ApiResponse.Success(result));
+                return Results.Created(uri, ApiResponse.Success(result, statusCode: HttpStatusCode.Created));
             })
             .WithName("SignUpUser")
             .WithSummary("Register a new user profile")

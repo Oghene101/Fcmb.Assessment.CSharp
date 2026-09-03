@@ -15,6 +15,7 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.11" />
       <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.11"/>
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
+      <PackageVersion Include="Quartz.Extensions.Hosting" Version="3.20.0"/>
       <PackageVersion Include="Refit.HttpClientFactory" Version="15.2.0"/>
     <PackageVersion Include="Scalar.AspNetCore" Version="2.16.20" />
       <PackageVersion Include="Scrutor" Version="7.0.0"/>

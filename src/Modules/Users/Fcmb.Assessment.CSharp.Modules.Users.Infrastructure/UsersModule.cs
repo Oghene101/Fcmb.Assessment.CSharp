@@ -8,6 +8,7 @@ using Fcmb.Assessment.CSharp.Modules.Users.Infrastructure.Authorization;
 using Fcmb.Assessment.CSharp.Modules.Users.Infrastructure.Configurations;
 using Fcmb.Assessment.CSharp.Modules.Users.Infrastructure.Database;
 using Fcmb.Assessment.CSharp.Modules.Users.Infrastructure.Integrations;
+using Fcmb.Assessment.CSharp.Modules.Users.Infrastructure.Outbox;
 using Fcmb.Assessment.CSharp.Modules.Users.Presentation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -48,6 +49,8 @@ public static class UsersModule
                         sp.GetRequiredService<InsertAuditLogsInterceptor>()));
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+            services.ConfigureOptions<ConfigureProcessOutboxJob>();
         }
 
         private void AddHttpClients(IConfiguration configuration)

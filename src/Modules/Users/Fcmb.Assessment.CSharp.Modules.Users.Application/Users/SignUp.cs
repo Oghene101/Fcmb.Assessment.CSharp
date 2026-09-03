@@ -1,10 +1,14 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Net;
+using Fcmb.Assessment.CSharp.Common.Application.Exceptions;
 using Fcmb.Assessment.CSharp.Common.Application.Extensions;
 using Fcmb.Assessment.CSharp.Common.Application.Messaging;
 using Fcmb.Assessment.CSharp.Common.Domain;
 using Fcmb.Assessment.CSharp.Modules.Users.Application.Data;
 using Fcmb.Assessment.CSharp.Modules.Users.Application.Extensions;
 using Fcmb.Assessment.CSharp.Modules.Users.Application.Integrations.KeyCloak;
+using Fcmb.Assessment.CSharp.Modules.Users.Domain.Emails;
+using Fcmb.Assessment.CSharp.Modules.Users.Domain.PhoneNumbers;
 using Fcmb.Assessment.CSharp.Modules.Users.Domain.Users;
 using FluentValidation;
 using SerilogTimings;
@@ -37,24 +41,59 @@ public static class SignUpUseCase
                 "{HandlerName} with Name: {FirstName} {LastName} and Email: {Email}",
                 HandlerName, request.FirstName, request.LastName, request.Email);
 
-            KeyCloakCreateUserRequest createUser = request.ToRequest();
+            await ValidateRequestAsync(request);
 
-            HttpResponseMessage response = await keyCloak.CreateUserAsync(createUser);
-            response.EnsureSuccessStatusCode();
-            string identityId = ExtractIdentityIdFromLocationHeader(response);
+            string identityId = await CreateIdentityUserAsync(request);
 
             Result<User> user = User.Create(
                 request.FirstName,
                 request.LastName,
+                request.Email,
+                request.PhoneNumber,
                 request.Dob,
                 request.UserType,
                 identityId);
 
+            Email email = Email.Create(request.Email, user.Value.Id);
+            PhoneNumber phoneNumber = PhoneNumber.Create(request.PhoneNumber, user.Value.Id);
+
             await uOw.UsersWriteRepository.AddAsync(user, cancellationToken);
+            await uOw.EmailsWriteRepository.AddAsync(email, cancellationToken);
+            await uOw.PhoneNumbersWriteRepository.AddAsync(phoneNumber, cancellationToken);
+
+            await uOw.SaveChangesAsync(cancellationToken);
 
             op.Complete();
             return new SignUpResponse(user.Value.Id);
         }
+
+        private async Task ValidateRequestAsync(Command request)
+        {
+            if (await uOw.EmailsReadRepository.EmailExistsAsync(request.Email))
+            {
+                throw ApiException.Conflict(EmailErrors.AlreadyExists);
+            }
+
+            if (await uOw.PhoneNumbersReadRepository.PhoneNumberExistsAsync(request.PhoneNumber))
+            {
+                throw ApiException.Conflict(PhoneNumberErrors.AlreadyExists);
+            }
+        }
+
+        private async Task<string> CreateIdentityUserAsync(Command request)
+        {
+            KeyCloakCreateUserRequest createUser = request.ToRequest();
+
+            HttpResponseMessage response = await keyCloak.CreateUserAsync(createUser);
+            if (response.StatusCode == HttpStatusCode.Conflict)
+            {
+                throw ApiException.Conflict(KeyCloakErrors.EmailAlreadyExists);
+            }
+
+            response.EnsureSuccessStatusCode();
+            return ExtractIdentityIdFromLocationHeader(response);
+        }
+
 
         private static string ExtractIdentityIdFromLocationHeader(
             HttpResponseMessage httpResponseMessage)
@@ -109,8 +148,11 @@ public static class SignUpUseCase
 
             RuleFor(x => x.Password)
                 .NotEmpty()
-                .MinimumLength(8)
-                .WithMessage("Password must be at least 8 characters long.");
+                .MinimumLength(8).WithMessage("Password must be at least 8 characters long")
+                .Matches("[A-Z]").WithMessage("Password must contain at least one uppercase letter")
+                .Matches("[a-z]").WithMessage("Password must contain at least one lowercase letter")
+                .Matches("[0-9]").WithMessage("Password must contain at least one digit")
+                .Matches("[^a-zA-Z0-9]").WithMessage("Password must contain at least one special character");
         }
     }
 }

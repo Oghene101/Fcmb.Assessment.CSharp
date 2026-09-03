@@ -4,7 +4,11 @@ using Fcmb.Assessment.CSharp.Common.Application.Outbox;
 using Fcmb.Assessment.CSharp.Common.Infrastructure;
 using Fcmb.Assessment.CSharp.Common.Infrastructure.Outbox;
 using Fcmb.Assessment.CSharp.Modules.Users.Application.Data;
+using Fcmb.Assessment.CSharp.Modules.Users.Domain.Emails;
+using Fcmb.Assessment.CSharp.Modules.Users.Domain.PhoneNumbers;
 using Fcmb.Assessment.CSharp.Modules.Users.Domain.Users;
+using Fcmb.Assessment.CSharp.Modules.Users.Infrastructure.Emails;
+using Fcmb.Assessment.CSharp.Modules.Users.Infrastructure.PhoneNumbers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
@@ -46,10 +50,30 @@ internal sealed class UnitOfWork(
 
     #endregion
 
-    #region Transactions
+    #region Users
 
     public IRepository<User> UsersWriteRepository =>
         field ??= new Repository<User, UsersDbContext>(context);
+
+    #endregion
+
+    #region Emails
+
+    public IEmailRepository EmailsReadRepository =>
+        field ??= new EmailRepository(Schemas.Users, DbConnection, DbTransaction);
+
+    public IRepository<Email> EmailsWriteRepository =>
+        field ??= new Repository<Email, UsersDbContext>(context);
+
+    #endregion
+
+    #region PhoneNumbers
+
+    public IPhoneNumberRepository PhoneNumbersReadRepository =>
+        field ??= new PhoneNumberRepository(Schemas.Users, DbConnection, DbTransaction);
+
+    public IRepository<PhoneNumber> PhoneNumbersWriteRepository =>
+        field ??= new Repository<PhoneNumber, UsersDbContext>(context);
 
     #endregion
 

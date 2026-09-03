@@ -23,6 +23,8 @@ public sealed class User : Entity
     public static Result<User> Create(
         string firstName,
         string lastName,
+        string email,
+        string phoneNumber,
         DateOnly dob,
         UserType userType,
         string identityId)
@@ -38,6 +40,17 @@ public sealed class User : Entity
         };
 
         user.InitializeAudit(id, id.ToString());
+
+        user.Raise(new UserSignedUpDomainEvent(
+            Guid.CreateVersion7(),
+            user.CreatedAt,
+            user.Id,
+            user.FirstName,
+            user.LastName,
+            email,
+            phoneNumber,
+            dob,
+            userType));
 
         return user;
     }

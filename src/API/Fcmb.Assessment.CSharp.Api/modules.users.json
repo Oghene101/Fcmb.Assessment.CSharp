@@ -1,13 +1,9 @@
 {
-  "Logging": {
-    "LogLevel": {
-      "Default": "Information",
-      "Microsoft.AspNetCore": "Warning"
+  "Users": {
+    "KeyCloak": {
+      "BaseUrl": "",
+      "ClientId": "",
+      "ClientSecret": ""
     }
-  },
-  "KeyCloak": {
-    "BaseUrl": "",
-    "ClientId": "",
-    "ClientSecret": ""
   }
 }

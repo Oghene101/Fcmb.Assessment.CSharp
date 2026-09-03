@@ -1,0 +1,8 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\..\Common\Fcmb.Assessment.CSharp.Common.Presentation\Fcmb.Assessment.CSharp.Common.Presentation.csproj"/>
+        <ProjectReference Include="..\Fcmb.Assessment.CSharp.Modules.Users.Application\Fcmb.Assessment.CSharp.Modules.Users.Application.csproj"/>
+    </ItemGroup>
+
+</Project>

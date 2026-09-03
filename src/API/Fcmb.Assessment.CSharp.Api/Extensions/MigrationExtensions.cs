@@ -1,4 +1,5 @@
 using Fcmb.Assessment.CSharp.Modules.Transactions.Infrastructure.Database;
+using Fcmb.Assessment.CSharp.Modules.Users.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 
 namespace Fcmb.Assessment.CSharp.Api.Extensions;
@@ -10,6 +11,7 @@ internal static class MigrationExtensions
         internal void ApplyMigrations()
         {
             using IServiceScope scope = app.ApplicationServices.CreateScope();
+            ApplyMigration<UsersDbContext>(scope);
             ApplyMigration<TransactionsDbContext>(scope);
         }
     }
