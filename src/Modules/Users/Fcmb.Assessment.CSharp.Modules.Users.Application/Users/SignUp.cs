@@ -45,26 +45,10 @@ public static class SignUpUseCase
 
             string identityId = await CreateIdentityUserAsync(request);
 
-            Result<User> user = User.Create(
-                request.FirstName,
-                request.LastName,
-                request.Email,
-                request.PhoneNumber,
-                request.Dob,
-                request.UserType,
-                identityId);
-
-            Email email = Email.Create(request.Email, user.Value.Id);
-            PhoneNumber phoneNumber = PhoneNumber.Create(request.PhoneNumber, user.Value.Id);
-
-            await uOw.UsersWriteRepository.AddAsync(user, cancellationToken);
-            await uOw.EmailsWriteRepository.AddAsync(email, cancellationToken);
-            await uOw.PhoneNumbersWriteRepository.AddAsync(phoneNumber, cancellationToken);
-
-            await uOw.SaveChangesAsync(cancellationToken);
+            Guid userId = await CreateApplicationUserAsync(request, identityId, cancellationToken);
 
             op.Complete();
-            return new SignUpResponse(user.Value.Id);
+            return new SignUpResponse(userId);
         }
 
         private async Task ValidateRequestAsync(Command request)
@@ -94,7 +78,6 @@ public static class SignUpUseCase
             return ExtractIdentityIdFromLocationHeader(response);
         }
 
-
         private static string ExtractIdentityIdFromLocationHeader(
             HttpResponseMessage httpResponseMessage)
         {
@@ -110,6 +93,31 @@ public static class SignUpUseCase
             string identityId = locationHeader.Substring(userSegmentValueIndex + usersSegmentName.Length);
 
             return identityId;
+        }
+
+        private async Task<Guid> CreateApplicationUserAsync(
+            Command request,
+            string identityId,
+            CancellationToken cancellationToken)
+        {
+            User user = User.Create(
+                request.FirstName,
+                request.LastName,
+                request.Email,
+                request.PhoneNumber,
+                request.Dob,
+                request.UserType,
+                identityId);
+
+            Email email = Email.Create(request.Email, user.Id);
+            PhoneNumber phoneNumber = PhoneNumber.Create(request.PhoneNumber, user.Id);
+
+            await uOw.UsersWriteRepository.AddAsync(user, cancellationToken);
+            await uOw.EmailsWriteRepository.AddAsync(email, cancellationToken);
+            await uOw.PhoneNumbersWriteRepository.AddAsync(phoneNumber, cancellationToken);
+
+            await uOw.SaveChangesAsync(cancellationToken);
+            return user.Id;
         }
     }
 
