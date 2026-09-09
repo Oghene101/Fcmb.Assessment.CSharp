@@ -3,6 +3,7 @@
     <ItemGroup>
         <ProjectReference Include="..\..\..\Common\Fcmb.Assessment.CSharp.Common.Application\Fcmb.Assessment.CSharp.Common.Application.csproj"/>
         <ProjectReference Include="..\Fcmb.Assessment.CSharp.Modules.Users.Domain\Fcmb.Assessment.CSharp.Modules.Users.Domain.csproj"/>
+        <ProjectReference Include="..\Fcmb.Assessment.CSharp.Modules.Users.IntegrationEvents\Fcmb.Assessment.CSharp.Modules.Users.IntegrationEvents.csproj"/>
     </ItemGroup>
 
 </Project>

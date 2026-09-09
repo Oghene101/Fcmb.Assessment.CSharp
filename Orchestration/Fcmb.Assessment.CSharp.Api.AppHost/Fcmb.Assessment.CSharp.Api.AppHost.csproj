@@ -11,6 +11,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="Aspire.Hosting.Azure.ServiceBus"/>
         <PackageReference Include="Aspire.Hosting.Keycloak"/>
     </ItemGroup>
 

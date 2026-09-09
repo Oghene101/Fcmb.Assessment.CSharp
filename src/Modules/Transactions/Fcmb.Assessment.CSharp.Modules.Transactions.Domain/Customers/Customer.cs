@@ -12,6 +12,9 @@ public sealed class Customer : Entity
 
     public string FirstName { get; private set; }
     public string LastName { get; private set; }
+    public string Email { get; private set; }
+    public string PhoneNumber { get; private set; }
+    public DateOnly Dob { get; private set; }
     public CustomerType CustomerType { get; private set; }
 
     //Navigation props
@@ -21,6 +24,9 @@ public sealed class Customer : Entity
     public static Result<Customer> Create(
         string firstName,
         string lastName,
+        string email,
+        string phoneNumber,
+        DateOnly dob,
         CustomerType customerType)
     {
         var id = Guid.CreateVersion7();
@@ -28,6 +34,9 @@ public sealed class Customer : Entity
         {
             FirstName = firstName,
             LastName = lastName,
+            Email = email,
+            PhoneNumber = phoneNumber,
+            Dob = dob,
             CustomerType = customerType
         };
         customer.InitializeAudit(id, id.ToString());

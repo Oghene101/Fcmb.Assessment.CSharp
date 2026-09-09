@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <ItemGroup>
         <ProjectReference Include="..\..\..\Common\Fcmb.Assessment.CSharp.Common.Presentation\Fcmb.Assessment.CSharp.Common.Presentation.csproj"/>
+        <ProjectReference Include="..\..\Users\Fcmb.Assessment.CSharp.Modules.Users.IntegrationEvents\Fcmb.Assessment.CSharp.Modules.Users.IntegrationEvents.csproj"/>
         <ProjectReference Include="..\Fcmb.Assessment.CSharp.Modules.Transactions.Application\Fcmb.Assessment.CSharp.Modules.Transactions.Application.csproj"/>
     </ItemGroup>
 </Project>

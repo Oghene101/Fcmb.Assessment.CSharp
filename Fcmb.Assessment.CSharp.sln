@@ -49,6 +49,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fcmb.Assessment.CSharp.Modu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fcmb.Assessment.CSharp.Modules.Users.Application", "src\Modules\Users\Fcmb.Assessment.CSharp.Modules.Users.Application\Fcmb.Assessment.CSharp.Modules.Users.Application.csproj", "{77A99420-B072-44D4-AAEA-7564957222E9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fcmb.Assessment.CSharp.Modules.Users.IntegrationEvents", "src\Modules\Users\Fcmb.Assessment.CSharp.Modules.Users.IntegrationEvents\Fcmb.Assessment.CSharp.Modules.Users.IntegrationEvents.csproj", "{A6B4936A-B07D-4BA3-B46F-CD9652747F49}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -111,6 +113,10 @@ Global
 		{77A99420-B072-44D4-AAEA-7564957222E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{77A99420-B072-44D4-AAEA-7564957222E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{77A99420-B072-44D4-AAEA-7564957222E9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A6B4936A-B07D-4BA3-B46F-CD9652747F49}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A6B4936A-B07D-4BA3-B46F-CD9652747F49}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A6B4936A-B07D-4BA3-B46F-CD9652747F49}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A6B4936A-B07D-4BA3-B46F-CD9652747F49}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{EA3817CF-A7A6-4DEE-86B8-BA8BF185C102} = {7A486692-728A-40EC-B84F-30DE4E3335F8}
@@ -132,5 +138,6 @@ Global
 		{EDB9E077-75D0-4413-ABC2-05E10A6AEEFC} = {C95B8FEA-4F2D-4871-911A-C478C7CD4F34}
 		{F7CBF243-8DBE-4046-8C4E-58648FF0A348} = {C95B8FEA-4F2D-4871-911A-C478C7CD4F34}
 		{77A99420-B072-44D4-AAEA-7564957222E9} = {C95B8FEA-4F2D-4871-911A-C478C7CD4F34}
+		{A6B4936A-B07D-4BA3-B46F-CD9652747F49} = {C95B8FEA-4F2D-4871-911A-C478C7CD4F34}
 	EndGlobalSection
 EndGlobal

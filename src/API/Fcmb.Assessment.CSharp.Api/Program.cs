@@ -1,5 +1,6 @@
 using Fcmb.Assessment.CSharp.Api.Extensions;
 using Fcmb.Assessment.CSharp.Api.Middleware;
+using Fcmb.Assessment.CSharp.Api.OpenTelemetry;
 using Fcmb.Assessment.CSharp.Common.Application;
 using Fcmb.Assessment.CSharp.Common.Infrastructure;
 using Fcmb.Assessment.CSharp.Common.Presentation.Extensions;
@@ -21,10 +22,22 @@ builder.Services.AddProblemDetails();
 builder.Services.AddOpenApiInternal();
 
 builder.Services.AddApplication([
-        AssemblyReference.Assembly,
-        Fcmb.Assessment.CSharp.Modules.Transactions.Application.AssemblyReference.Assembly
-    ])
-    .AddInfrastructure();
+    AssemblyReference.Assembly,
+    Fcmb.Assessment.CSharp.Modules.Transactions.Application.AssemblyReference.Assembly
+]);
+
+string messageBrokerConnectionString = builder.Configuration.GetConnectionString("azureservicebus")!;
+builder.Services.AddInfrastructure(
+    DiagnosticsConfig.ServiceName,
+    [
+        UsersModule.ConfigureTopology,
+        TransactionsModule.ConfigureTopology
+    ],
+    [
+        UsersModule.ConfigureConsumers,
+        TransactionsModule.ConfigureConsumers
+    ],
+    messageBrokerConnectionString);
 
 builder.Configuration.AddModuleConfiguration(["users", "transactions"]);
 

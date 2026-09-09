@@ -31,6 +31,11 @@ public static class ApplicationConfiguration
                 .AsImplementedInterfaces()
                 .WithScopedLifetime());
 
+            services.Scan(scan => scan.FromAssemblies(moduleAssemblies)
+                .AddClasses(classes => classes.AssignableTo(typeof(IIntegrationEventHandler<>)), publicOnly: false)
+                .AsImplementedInterfaces()
+                .WithScopedLifetime());
+
             services.AddValidatorsFromAssemblies(moduleAssemblies, includeInternalTypes: true);
 
             return services;

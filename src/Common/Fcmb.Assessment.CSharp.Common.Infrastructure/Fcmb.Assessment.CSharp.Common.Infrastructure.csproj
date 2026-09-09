@@ -2,6 +2,7 @@
     
     <ItemGroup>
       <PackageReference Include="Dapper" />
+        <PackageReference Include="MassTransit.Azure.ServiceBus.Core"/>
       <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
       <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />

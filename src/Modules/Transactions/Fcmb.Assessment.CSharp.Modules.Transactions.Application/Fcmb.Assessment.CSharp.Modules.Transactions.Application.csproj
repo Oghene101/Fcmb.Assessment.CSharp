@@ -2,6 +2,7 @@
     
     <ItemGroup>
       <ProjectReference Include="..\..\..\Common\Fcmb.Assessment.CSharp.Common.Application\Fcmb.Assessment.CSharp.Common.Application.csproj" />
+        <ProjectReference Include="..\Fcmb.Assessment.CSharp.Modules.Transactions.Domain\Fcmb.Assessment.CSharp.Modules.Transactions.Domain.csproj"/>
     </ItemGroup>
 
 </Project>

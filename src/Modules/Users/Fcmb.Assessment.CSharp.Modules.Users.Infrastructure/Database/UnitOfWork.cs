@@ -1,7 +1,9 @@
 using System.Data;
 using Fcmb.Assessment.CSharp.Common.Application.Data;
+using Fcmb.Assessment.CSharp.Common.Application.Inbox;
 using Fcmb.Assessment.CSharp.Common.Application.Outbox;
 using Fcmb.Assessment.CSharp.Common.Infrastructure;
+using Fcmb.Assessment.CSharp.Common.Infrastructure.Inbox;
 using Fcmb.Assessment.CSharp.Common.Infrastructure.Outbox;
 using Fcmb.Assessment.CSharp.Modules.Users.Application.Data;
 using Fcmb.Assessment.CSharp.Modules.Users.Domain.Emails;
@@ -47,6 +49,33 @@ internal sealed class UnitOfWork(
 
     public IRepository<DeadLetteredOutboxMessage> DeadLetteredOutboxMessagesWriteRepository =>
         field ??= new Repository<DeadLetteredOutboxMessage, UsersDbContext>(context);
+
+    #endregion
+
+    #region InboxMessages
+
+    public IInboxMessageRepository InboxMessagesReadRepository =>
+        field ??= new InboxMessageRepository(Schemas.Users, DbConnection, DbTransaction);
+
+    public IRepository<InboxMessage> InboxMessagesWriteRepository =>
+        field ??= new Repository<InboxMessage, UsersDbContext>(context);
+
+    #endregion
+
+    #region InboxMessageConsumers
+
+    public IInboxMessageConsumerRepository InboxMessageConsumersReadRepository =>
+        field ??= new InboxMessageConsumerRepository(Schemas.Users, DbConnection, DbTransaction);
+
+    public IRepository<InboxMessageConsumer> InboxMessageConsumersWriteRepository =>
+        field ??= new Repository<InboxMessageConsumer, UsersDbContext>(context);
+
+    #endregion
+
+    #region DeadLetteredInboxMessages
+
+    public IRepository<DeadLetteredInboxMessage> DeadLetteredInboxMessagesWriteRepository =>
+        field ??= new Repository<DeadLetteredInboxMessage, UsersDbContext>(context);
 
     #endregion
 
