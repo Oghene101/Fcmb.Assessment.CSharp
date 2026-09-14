@@ -45,51 +45,48 @@ public static class TransactionsModule
 
         private void AddDomainEventHandlers()
         {
-            Type[] domainEventHandlers = services
+            Type[] domainEventHandlerServiceTypes = services
                 .Where(sd => sd.ServiceType.IsGenericType &&
                              sd.ServiceType.GetGenericTypeDefinition() == typeof(IDomainEventHandler<>) &&
                              sd.ImplementationType != null &&
                              sd.ImplementationType.Assembly == Application.AssemblyReference.Assembly)
-                .Select(sd => sd.ImplementationType!)
+                .Select(sd => sd.ServiceType)
                 .Distinct()
                 .ToArray();
 
-            foreach (Type domainEventHandler in domainEventHandlers)
+            foreach (Type serviceType in domainEventHandlerServiceTypes)
             {
-                Type domainEvent = domainEventHandler
-                    .GetInterfaces()
-                    .Single(i => i.IsGenericType)
+                Type domainEvent = serviceType
                     .GetGenericArguments()
                     .Single();
 
                 Type closedIdempotentHandler = typeof(IdempotentDomainEventHandler<>).MakeGenericType(domainEvent);
 
-                services.Decorate(domainEventHandler, closedIdempotentHandler);
+                services.Decorate(serviceType, closedIdempotentHandler);
             }
         }
 
         private void AddIntegrationEventHandlers()
         {
-            Type[] domainEventHandlers = services
+            Type[] integrationEventHandlerServiceTypes = services
                 .Where(sd => sd.ServiceType.IsGenericType &&
                              sd.ServiceType.GetGenericTypeDefinition() == typeof(IIntegrationEventHandler<>) &&
                              sd.ImplementationType != null &&
-                             sd.ImplementationType.Assembly == Application.AssemblyReference.Assembly)
-                .Select(sd => sd.ImplementationType!)
+                             sd.ImplementationType.Assembly == AssemblyReference.Assembly)
+                .Select(sd => sd.ServiceType)
                 .Distinct()
                 .ToArray();
 
-            foreach (Type domainEventHandler in domainEventHandlers)
+            foreach (Type serviceType in integrationEventHandlerServiceTypes)
             {
-                Type domainEvent = domainEventHandler
-                    .GetInterfaces()
-                    .Single(i => i.IsGenericType)
+                Type integrationEvent = serviceType
                     .GetGenericArguments()
                     .Single();
 
-                Type closedIdempotentHandler = typeof(IdempotentIntegrationEventHandler<>).MakeGenericType(domainEvent);
+                Type closedIdempotentHandler =
+                    typeof(IdempotentIntegrationEventHandler<>).MakeGenericType(integrationEvent);
 
-                services.Decorate(domainEventHandler, closedIdempotentHandler);
+                services.Decorate(serviceType, closedIdempotentHandler);
             }
         }
 
