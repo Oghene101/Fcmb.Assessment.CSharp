@@ -18,6 +18,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Quartz;
 using Refit;
 
 namespace Fcmb.Assessment.CSharp.Modules.Users.Infrastructure;
@@ -29,6 +30,10 @@ public static class UsersModule
         public IServiceCollection AddUsersModule(IConfiguration configuration)
         {
             services.AddUsersOptions();
+
+            services.AddDomainEventHandlers();
+
+            services.AddIntegrationEventHandlers();
 
             services.AddInfrastructure(configuration);
 
@@ -55,7 +60,7 @@ public static class UsersModule
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-            services.ConfigureOptions<ConfigureProcessOutboxJob>();
+            //services.ConfigureOptions<ConfigureProcessOutboxJob>();
         }
 
         private void AddDomainEventHandlers()
@@ -117,6 +122,17 @@ public static class UsersModule
             services.AddRefitGeneratedClient<IKeyCloakClient>()
                 .ConfigureHttpClient(client => client.BaseAddress = new Uri(baseUrl))
                 .AddHttpMessageHandler<KeycloakAuthHandler>();
+        }
+
+        public static void ConfigureJobs(
+            IQuartzBuilder quartz,
+            IConfiguration configuration)
+        {
+            OutboxSettings outbox = configuration
+                .GetSection(OutboxSettings.Path)
+                .Get<OutboxSettings>()!;
+
+            quartz.AddProcessOutboxJob(outbox);
         }
 
         public static void ConfigureConsumers(

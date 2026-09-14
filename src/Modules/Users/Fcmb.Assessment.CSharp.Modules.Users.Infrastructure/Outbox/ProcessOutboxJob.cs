@@ -23,7 +23,8 @@ internal sealed class ProcessOutboxJob(
     private readonly OutboxSettings _processOutbox = processOutbox.Value;
     private const string Module = "Users";
 
-    public async Task Execute(IJobExecutionContext context)
+    public async ValueTask Execute(IJobExecutionContext context,
+        CancellationToken cancellationToken = new())
     {
         logger.LogInformation("Beginning {Module} outbox message processing", Module);
 

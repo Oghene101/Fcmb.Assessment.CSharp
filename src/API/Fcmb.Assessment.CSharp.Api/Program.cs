@@ -26,9 +26,16 @@ builder.Services.AddApplication([
     Fcmb.Assessment.CSharp.Modules.Transactions.Application.AssemblyReference.Assembly
 ]);
 
+builder.Configuration.AddModuleConfiguration(["users", "transactions"]);
+
 string messageBrokerConnectionString = builder.Configuration.GetConnectionString("azureservicebus")!;
+
 builder.Services.AddInfrastructure(
+    builder.Configuration,
     DiagnosticsConfig.ServiceName,
+    [
+        UsersModule.ConfigureJobs,
+    ],
     [
         UsersModule.ConfigureTopology,
         TransactionsModule.ConfigureTopology
@@ -38,8 +45,6 @@ builder.Services.AddInfrastructure(
         TransactionsModule.ConfigureConsumers
     ],
     messageBrokerConnectionString);
-
-builder.Configuration.AddModuleConfiguration(["users", "transactions"]);
 
 builder.Services.AddUsersModule(builder.Configuration);
 builder.Services.AddTransactionsModule(builder.Configuration);

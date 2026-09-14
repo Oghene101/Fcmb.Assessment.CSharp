@@ -1,23 +1,25 @@
-using Microsoft.Extensions.Options;
 using Quartz;
 
 namespace Fcmb.Assessment.CSharp.Modules.Users.Infrastructure.Outbox;
 
-internal sealed class ConfigureProcessOutboxJob(IOptions<OutboxSettings> outboxOptions)
-    : IConfigureOptions<QuartzOptions>
+internal static class ConfigureProcessOutboxJob
 {
-    private readonly OutboxSettings _outboxSettings = outboxOptions.Value;
-
-    public void Configure(QuartzOptions options)
+    public static IQuartzBuilder AddProcessOutboxJob(
+        this IQuartzBuilder quartz,
+        OutboxSettings outbox)
     {
         string jobName = typeof(ProcessOutboxJob).FullName!;
 
-        options
-            .AddJob<ProcessOutboxJob>(configure => configure.WithIdentity(jobName))
+        quartz
+            .AddJob<ProcessOutboxJob>(job => job.WithIdentity(jobName))
             .AddTrigger(configure =>
                 configure
                     .ForJob(jobName)
                     .WithSimpleSchedule(schedule =>
-                        schedule.WithIntervalInSeconds(_outboxSettings.IntervalInSeconds).RepeatForever()));
+                        schedule.WithInterval(
+                                TimeSpan.FromSeconds(outbox.IntervalInSeconds))
+                            .RepeatForever()));
+
+        return quartz;
     }
 }

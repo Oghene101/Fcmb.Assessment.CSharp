@@ -3,6 +3,7 @@ using Fcmb.Assessment.CSharp.Common.Infrastructure.Authentication;
 using Fcmb.Assessment.CSharp.Common.Infrastructure.Configurations;
 using Fcmb.Assessment.CSharp.Common.Infrastructure.Outbox;
 using MassTransit;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Quartz;
@@ -14,7 +15,9 @@ public static class InfrastructureConfiguration
     extension(IServiceCollection services)
     {
         public IServiceCollection AddInfrastructure(
+            IConfiguration configuration,
             string serviceName,
+            Action<IQuartzBuilder, IConfiguration>[] moduleConfigureJobs,
             Action<IServiceBusBusFactoryConfigurator>[] moduleConfigureTopology,
             Action<IRegistrationConfigurator, string>[] moduleConfigureConsumers,
             string messageBrokerConnectionString)
@@ -28,7 +31,13 @@ public static class InfrastructureConfiguration
             services.TryAddSingleton<InsertOutboxMessagesInterceptor>();
             services.AddScoped<InsertAuditLogsInterceptor>();
 
-            services.AddQuartz();
+            services.AddQuartz(quartz =>
+            {
+                foreach (Action<IQuartzBuilder, IConfiguration> configureQuartz in moduleConfigureJobs)
+                {
+                    configureQuartz(quartz, configuration);
+                }
+            });
             services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
 
             services.AddMassTransit(configurator =>
