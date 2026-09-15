@@ -59,8 +59,6 @@ public static class UsersModule
                         sp.GetRequiredService<InsertAuditLogsInterceptor>()));
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();
-
-            //services.ConfigureOptions<ConfigureProcessOutboxJob>();
         }
 
         private void AddDomainEventHandlers()

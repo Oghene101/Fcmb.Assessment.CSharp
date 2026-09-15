@@ -3,6 +3,7 @@ using Fcmb.Assessment.CSharp.Common.Infrastructure.Authentication;
 using Fcmb.Assessment.CSharp.Common.Infrastructure.Configurations;
 using Fcmb.Assessment.CSharp.Common.Infrastructure.Outbox;
 using MassTransit;
+using MassTransit.AzureServiceBusTransport;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -22,6 +23,15 @@ public static class InfrastructureConfiguration
             Action<IRegistrationConfigurator, string>[] moduleConfigureConsumers,
             string messageBrokerConnectionString)
         {
+            #region Azure Service Bus Emulator Default Configs
+
+            //These defaults are set because of Azure Service Bus Emulator constraints. Don't do this in prod.
+            Defaults.DefaultMessageTimeToLive = TimeSpan.FromHours(1);
+            Defaults.BasicMessageTimeToLive = TimeSpan.FromHours(1);
+            Defaults.AutoDeleteOnIdle = TimeSpan.FromHours(1);
+
+            #endregion
+
             services.AddOptionsInternal();
 
             services.AddAuthenticationInternal();
