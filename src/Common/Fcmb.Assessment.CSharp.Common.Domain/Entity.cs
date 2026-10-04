@@ -42,5 +42,4 @@ public abstract class Entity
         LastUpdatedAt = DateTimeOffset.UtcNow;
         LastUpdatedBy = updatedBy;
     }
-
 }

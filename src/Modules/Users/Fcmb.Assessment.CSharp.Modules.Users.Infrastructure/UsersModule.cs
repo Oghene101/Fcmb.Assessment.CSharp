@@ -6,10 +6,9 @@ using Fcmb.Assessment.CSharp.Common.Presentation.Extensions;
 using Fcmb.Assessment.CSharp.Modules.Users.Application.Data;
 using Fcmb.Assessment.CSharp.Modules.Users.Application.Integrations.KeyCloak;
 using Fcmb.Assessment.CSharp.Modules.Users.Infrastructure.Authorization;
-using Fcmb.Assessment.CSharp.Modules.Users.Infrastructure.Configurations;
 using Fcmb.Assessment.CSharp.Modules.Users.Infrastructure.Database;
 using Fcmb.Assessment.CSharp.Modules.Users.Infrastructure.Inbox;
-using Fcmb.Assessment.CSharp.Modules.Users.Infrastructure.Integrations;
+using Fcmb.Assessment.CSharp.Modules.Users.Infrastructure.Integrations.KeyCloak;
 using Fcmb.Assessment.CSharp.Modules.Users.Infrastructure.Outbox;
 using Fcmb.Assessment.CSharp.Modules.Users.IntegrationEvents;
 using Fcmb.Assessment.CSharp.Modules.Users.Presentation;
@@ -127,7 +126,13 @@ public static class UsersModule
                 .GetSection(OutboxSettings.Path)
                 .Get<OutboxSettings>()!;
 
+            InboxSettings inbox = configuration
+                .GetSection(InboxSettings.Path)
+                .Get<InboxSettings>()!;
+
             quartz.AddProcessOutboxJob(outbox);
+
+            quartz.AddProcessInboxJob(inbox);
         }
 
         public static void ConfigureConsumers(

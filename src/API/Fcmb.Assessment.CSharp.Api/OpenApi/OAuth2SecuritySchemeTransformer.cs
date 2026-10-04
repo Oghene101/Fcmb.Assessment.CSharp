@@ -1,4 +1,4 @@
-using Fcmb.Assessment.CSharp.Modules.Users.Infrastructure.Configurations;
+using Fcmb.Assessment.CSharp.Modules.Users.Infrastructure.Integrations.KeyCloak;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.Extensions.Options;

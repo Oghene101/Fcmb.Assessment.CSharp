@@ -1,9 +1,21 @@
 {
   "Users": {
-    "KeyCloak": {
-      "BaseUrl": "",
-      "ClientId": "",
-      "ClientSecret": ""
+    "Outbox": {
+      "IntervalInSeconds": 15,
+      "BatchSize": 20,
+      "MaxRetries": 3,
+      "RetryDelaySeconds": 30
+    },
+    "Inbox": {
+      "IntervalInSeconds": 15,
+      "BatchSize": 20,
+      "MaxRetries": 3,
+      "RetryDelaySeconds": 30
     }
+  },
+  "KeyCloak": {
+    "BaseUrl": "",
+    "ClientId": "",
+    "ClientSecret": ""
   }
 }

@@ -34,7 +34,7 @@ public sealed class Account : Entity
         };
 
         account.InitializeAudit(
-            Guid.CreateVersion7(), 
+            Guid.CreateVersion7(),
             customerId.ToString());
 
         return account;

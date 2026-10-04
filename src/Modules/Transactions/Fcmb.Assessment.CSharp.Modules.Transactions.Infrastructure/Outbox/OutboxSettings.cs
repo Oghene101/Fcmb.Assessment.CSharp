@@ -1,4 +1,4 @@
-namespace Fcmb.Assessment.CSharp.Modules.Users.Infrastructure.Outbox;
+namespace Fcmb.Assessment.CSharp.Modules.Transactions.Infrastructure.Outbox;
 
 internal sealed record OutboxSettings
 {

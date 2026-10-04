@@ -57,7 +57,6 @@ public sealed class InsertAuditLogsInterceptor(
                 OccurredOn = DateTimeOffset.UtcNow,
                 Changes = GetChanges(entry)
             })
-
         ];
 
         if (auditLogs.Count is 0)

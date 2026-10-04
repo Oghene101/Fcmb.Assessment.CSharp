@@ -10,4 +10,3 @@ public static class SerializerSettings
         MetadataPropertyHandling = MetadataPropertyHandling.ReadAhead
     };
 }
-

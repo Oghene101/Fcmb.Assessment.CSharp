@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Quartz;
 
 namespace Fcmb.Assessment.CSharp.Modules.Transactions.Infrastructure;
 
@@ -22,6 +23,12 @@ public static class TransactionsModule
     {
         public IServiceCollection AddTransactionsModule(IConfiguration configuration)
         {
+            services.AddTransactionsOptions();
+
+            services.AddDomainEventHandlers();
+
+            services.AddIntegrationEventHandlers();
+
             services.AddInfrastructure(configuration);
 
             services.AddEndpoints(AssemblyReference.Assembly);
@@ -88,6 +95,23 @@ public static class TransactionsModule
 
                 services.Decorate(serviceType, closedIdempotentHandler);
             }
+        }
+
+        public static void ConfigureJobs(
+            IQuartzBuilder quartz,
+            IConfiguration configuration)
+        {
+            OutboxSettings outbox = configuration
+                .GetSection(OutboxSettings.Path)
+                .Get<OutboxSettings>()!;
+
+            InboxSettings inbox = configuration
+                .GetSection(InboxSettings.Path)
+                .Get<InboxSettings>()!;
+
+            quartz.AddProcessOutboxJob(outbox);
+
+            quartz.AddProcessInboxJob(inbox);
         }
 
         public static void ConfigureConsumers(

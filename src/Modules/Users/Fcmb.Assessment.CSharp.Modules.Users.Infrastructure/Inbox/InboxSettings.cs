@@ -1,8 +1,8 @@
-namespace Fcmb.Assessment.CSharp.Modules.Users.Infrastructure.Outbox;
+namespace Fcmb.Assessment.CSharp.Modules.Users.Infrastructure.Inbox;
 
-internal sealed record OutboxSettings
+internal sealed record InboxSettings
 {
-    public const string Path = "Users:Outbox";
+    public const string Path = "Transactions:Inbox";
     public int IntervalInSeconds { get; init; }
     public int BatchSize { get; init; }
     public int MaxRetries { get; init; }

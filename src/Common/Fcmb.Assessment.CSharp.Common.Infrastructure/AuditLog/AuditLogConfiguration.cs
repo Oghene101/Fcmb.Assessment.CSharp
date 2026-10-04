@@ -8,7 +8,7 @@ internal sealed class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
     public void Configure(EntityTypeBuilder<AuditLog> builder)
     {
         builder.ToTable("AuditLogs");
-        
+
         builder.Property(a => a.Action)
             .HasColumnType("varchar(20)")
             .IsRequired();
@@ -16,7 +16,7 @@ internal sealed class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
         builder.Property(a => a.UserId)
             .HasColumnType("varchar(50)")
             .IsRequired();
-        
+
         builder.HasIndex(a => a.UserId);
 
         builder.Property(a => a.EntityName)
@@ -31,9 +31,9 @@ internal sealed class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
 
         builder.Property(a => a.Changes)
             .IsRequired();
-        
+
         builder.HasIndex(a => new { a.EntityName, a.EntityId });
-        
+
         builder.HasIndex(a => a.OccurredOn);
     }
 }

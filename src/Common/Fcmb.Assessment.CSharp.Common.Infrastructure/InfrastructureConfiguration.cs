@@ -4,9 +4,13 @@ using Fcmb.Assessment.CSharp.Common.Infrastructure.Configurations;
 using Fcmb.Assessment.CSharp.Common.Infrastructure.Outbox;
 using MassTransit;
 using MassTransit.AzureServiceBusTransport;
+using MassTransit.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Npgsql;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Quartz;
 
 namespace Fcmb.Assessment.CSharp.Common.Infrastructure;
@@ -72,6 +76,22 @@ public static class InfrastructureConfiguration
                     busFactoryConfigurator.ConfigureEndpoints(context);
                 });
             });
+
+            services
+                .AddOpenTelemetry()
+                .ConfigureResource(resource => resource.AddService(serviceName))
+                .WithTracing(tracing =>
+                {
+                    tracing
+                        .AddAspNetCoreInstrumentation()
+                        .AddHttpClientInstrumentation()
+                        .AddEntityFrameworkCoreInstrumentation()
+                        .AddRedisInstrumentation()
+                        .AddNpgsql()
+                        .AddSource(DiagnosticHeaders.DefaultListenerName);
+
+                    tracing.AddOtlpExporter();
+                });
 
             return services;
         }

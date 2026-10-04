@@ -6,6 +6,8 @@ using Fcmb.Assessment.CSharp.Common.Infrastructure;
 using Fcmb.Assessment.CSharp.Common.Presentation.Extensions;
 using Fcmb.Assessment.CSharp.Modules.Transactions.Infrastructure;
 using Fcmb.Assessment.CSharp.Modules.Users.Infrastructure;
+using HealthChecks.UI.Client;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Scalar.AspNetCore;
 using Serilog;
 using AssemblyReference = Fcmb.Assessment.CSharp.Modules.Users.Application.AssemblyReference;
@@ -15,7 +17,6 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog((context, loggerConfiguration) =>
     loggerConfiguration.ReadFrom.Configuration(context.Configuration));
 
-// Add services to the container.
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
@@ -35,6 +36,7 @@ builder.Services.AddInfrastructure(
     DiagnosticsConfig.ServiceName,
     [
         UsersModule.ConfigureJobs,
+        TransactionsModule.ConfigureJobs,
     ],
     [
         UsersModule.ConfigureTopology,
@@ -51,7 +53,6 @@ builder.Services.AddTransactionsModule(builder.Configuration);
 
 WebApplication app = builder.Build();
 
-// Configure the HTTP request pipeline.
 app.UseSerilogRequestLogging();
 app.UseExceptionHandler();
 if (app.Environment.IsDevelopment())
@@ -80,8 +81,14 @@ app.UseHttpsRedirection();
 
 app.MapEndpoints();
 
+app.MapHealthChecks("health", new HealthCheckOptions
+{
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+});
+
 await app.RunAsync();
 
 //create an external requests table
 //configure standard policies to httpclients
 //integrate service bus
+//cache token from key cloak

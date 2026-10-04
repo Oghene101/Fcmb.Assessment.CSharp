@@ -9,8 +9,10 @@ namespace Fcmb.Assessment.CSharp.Api.Middleware;
 internal sealed class GlobalExceptionHandler(
     ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
 {
-    [RequiresDynamicCode("Calls Microsoft.AspNetCore.Http.HttpResponseJsonExtensions.WriteAsJsonAsync<TValue>(TValue, CancellationToken)")]
-    [RequiresUnreferencedCode("Calls Microsoft.AspNetCore.Http.HttpResponseJsonExtensions.WriteAsJsonAsync<TValue>(TValue, CancellationToken)")]
+    [RequiresDynamicCode(
+        "Calls Microsoft.AspNetCore.Http.HttpResponseJsonExtensions.WriteAsJsonAsync<TValue>(TValue, CancellationToken)")]
+    [RequiresUnreferencedCode(
+        "Calls Microsoft.AspNetCore.Http.HttpResponseJsonExtensions.WriteAsJsonAsync<TValue>(TValue, CancellationToken)")]
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception,
         CancellationToken cancellationToken)
     {

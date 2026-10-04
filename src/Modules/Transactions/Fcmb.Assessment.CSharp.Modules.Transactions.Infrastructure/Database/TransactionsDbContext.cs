@@ -1,3 +1,4 @@
+using Fcmb.Assessment.CSharp.Common.Infrastructure;
 using Fcmb.Assessment.CSharp.Modules.Transactions.Domain.Accounts;
 using Fcmb.Assessment.CSharp.Modules.Transactions.Domain.Customers;
 using Fcmb.Assessment.CSharp.Modules.Transactions.Domain.Rewards;
@@ -17,9 +18,9 @@ public sealed class TransactionsDbContext(
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(Schemas.Transactions);
-        
+
         base.OnModelCreating(modelBuilder);
-        modelBuilder.ApplyConfigurationsFromAssembly(Common.Infrastructure.AssemblyReference.Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(AssemblyReference.Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(TransactionsDbContext).Assembly);
     }
 }

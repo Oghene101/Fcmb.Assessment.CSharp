@@ -4,5 +4,3 @@ internal static class Schemas
 {
     internal const string Transactions = "transactions";
 }
-
-

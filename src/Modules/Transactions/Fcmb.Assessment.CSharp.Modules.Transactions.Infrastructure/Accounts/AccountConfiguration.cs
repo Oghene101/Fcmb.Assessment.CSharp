@@ -11,17 +11,17 @@ internal sealed class AccountConfiguration : IEntityTypeConfiguration<Account>
         builder.Property(a => a.AccountName)
             .HasColumnType("varchar(150)")
             .IsRequired();
-        
+
         builder.HasIndex(a => a.AccountName)
             .IsUnique();
-        
+
         builder.Property(a => a.AccountNumber)
             .HasColumnType("char(10)")
             .IsRequired();
 
         builder.HasIndex(a => a.AccountNumber)
             .IsUnique();
-        
+
         builder.Property(a => a.AccountBalance)
             .HasColumnType("decimal(18,2)");
 

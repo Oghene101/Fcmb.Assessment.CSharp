@@ -1,8 +1,16 @@
 {
-  "Logging": {
-    "LogLevel": {
-      "Default": "Information",
-      "Microsoft.AspNetCore": "Warning"
+  "Transactions": {
+    "Outbox": {
+      "IntervalInSeconds": 15,
+      "BatchSize": 20,
+      "MaxRetries": 3,
+      "RetryDelaySeconds": 30
+    },
+    "Inbox": {
+      "IntervalInSeconds": 15,
+      "BatchSize": 20,
+      "MaxRetries": 3,
+      "RetryDelaySeconds": 30
     }
   }
 }

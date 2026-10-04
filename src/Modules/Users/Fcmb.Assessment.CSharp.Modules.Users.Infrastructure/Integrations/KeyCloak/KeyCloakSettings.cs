@@ -1,4 +1,4 @@
-namespace Fcmb.Assessment.CSharp.Modules.Users.Infrastructure.Configurations;
+namespace Fcmb.Assessment.CSharp.Modules.Users.Infrastructure.Integrations.KeyCloak;
 
 public sealed record KeyCloakSettings
 {

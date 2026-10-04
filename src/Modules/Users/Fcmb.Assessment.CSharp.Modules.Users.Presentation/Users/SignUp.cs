@@ -2,15 +2,11 @@ using System.Net;
 using Fcmb.Assessment.CSharp.Common.Application.Messaging;
 using Fcmb.Assessment.CSharp.Common.Presentation;
 using Fcmb.Assessment.CSharp.Modules.Users.Application.Extensions;
-using Fcmb.Assessment.CSharp.Modules.Users.Application.Users;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using SignUpRequest =
-    Fcmb.Assessment.CSharp.Modules.Users.Application.Contracts.Dtos.Users.SignUpRequest;
-using SignUpResponse =
-    Fcmb.Assessment.CSharp.Modules.Users.Application.Contracts.Dtos.Users.SignUpResponse;
-
+using static Fcmb.Assessment.CSharp.Modules.Users.Application.Contracts.Dtos.Users;
+using static Fcmb.Assessment.CSharp.Modules.Users.Application.Users.SignUpUseCase;
 
 namespace Fcmb.Assessment.CSharp.Modules.Users.Presentation.Users;
 
@@ -20,7 +16,7 @@ internal sealed class SignUpEndpoint : IEndpoint
     {
         app.MapPost(Resources.Users + "/sign-up", async (
                 SignUpRequest request,
-                IRequestHandler<SignUpUseCase.Command, SignUpResponse> handler,
+                IRequestHandler<Command, SignUpResponse> handler,
                 HttpContext context,
                 CancellationToken cancellationToken) =>
             {

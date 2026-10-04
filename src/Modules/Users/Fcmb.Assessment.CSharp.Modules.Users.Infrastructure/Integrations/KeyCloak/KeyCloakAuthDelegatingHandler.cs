@@ -1,10 +1,9 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
-using Fcmb.Assessment.CSharp.Modules.Users.Infrastructure.Configurations;
 using Microsoft.Extensions.Options;
 
-namespace Fcmb.Assessment.CSharp.Modules.Users.Infrastructure.Integrations;
+namespace Fcmb.Assessment.CSharp.Modules.Users.Infrastructure.Integrations.KeyCloak;
 
 internal sealed class KeycloakAuthHandler(
     IHttpClientFactory httpClientFactory,
