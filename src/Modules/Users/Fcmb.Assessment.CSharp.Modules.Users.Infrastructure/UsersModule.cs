@@ -2,6 +2,7 @@ using Fcmb.Assessment.CSharp.Common.Application.Authorization;
 using Fcmb.Assessment.CSharp.Common.Application.Messaging;
 using Fcmb.Assessment.CSharp.Common.Infrastructure.AuditLog;
 using Fcmb.Assessment.CSharp.Common.Infrastructure.Outbox;
+using Fcmb.Assessment.CSharp.Common.Infrastructure.Resilience;
 using Fcmb.Assessment.CSharp.Common.Presentation.Extensions;
 using Fcmb.Assessment.CSharp.Modules.Users.Application.Data;
 using Fcmb.Assessment.CSharp.Modules.Users.Application.Integrations.KeyCloak;
@@ -11,14 +12,15 @@ using Fcmb.Assessment.CSharp.Modules.Users.Infrastructure.Inbox;
 using Fcmb.Assessment.CSharp.Modules.Users.Infrastructure.Integrations.KeyCloak;
 using Fcmb.Assessment.CSharp.Modules.Users.Infrastructure.Outbox;
 using Fcmb.Assessment.CSharp.Modules.Users.IntegrationEvents;
-using Fcmb.Assessment.CSharp.Modules.Users.Presentation;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Http.Resilience;
 using Quartz;
 using Refit;
+using AssemblyReference = Fcmb.Assessment.CSharp.Modules.Users.Presentation.AssemblyReference;
 
 namespace Fcmb.Assessment.CSharp.Modules.Users.Infrastructure;
 
@@ -115,7 +117,8 @@ public static class UsersModule
 
             services.AddRefitGeneratedClient<IKeyCloakClient>()
                 .ConfigureHttpClient(client => client.BaseAddress = new Uri(baseUrl))
-                .AddHttpMessageHandler<KeycloakAuthHandler>();
+                .AddHttpMessageHandler<KeycloakAuthHandler>()
+                .ConfigureStandardPolicies();
         }
 
         public static void ConfigureJobs(
@@ -149,5 +152,19 @@ public static class UsersModule
             serviceBusBusFactoryConfigurator.Message<UserSignedUpIntegrationEvent>(m =>
                 m.SetEntityName("domain-events-topic"));
         }
+    }
+
+    private static void ConfigureStandardPolicies(this IHttpClientBuilder builder)
+    {
+        builder.ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+        {
+            PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+            PooledConnectionIdleTimeout = TimeSpan.FromMinutes(2),
+            MaxConnectionsPerServer = 10
+        });
+
+        builder
+            .AddStandardResilienceHandler()
+            .Configure(StandardHttpPolicies.Configure);
     }
 }

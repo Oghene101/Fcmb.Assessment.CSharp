@@ -89,6 +89,5 @@ app.MapHealthChecks("health", new HealthCheckOptions
 await app.RunAsync();
 
 //create an external requests table
-//configure standard policies to httpclients
 //integrate service bus
 //cache token from key cloak
