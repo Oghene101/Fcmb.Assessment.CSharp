@@ -1,10 +1,11 @@
 # Build output
-**/[Bb]in/
-**/[Ob]j/
+bin/
+obj/
 artifacts/
 
 # Test results
-**/[Tt]est[Rr]esults/
+testresults/
+TestResults/
 *.trx
 *.coverage
 coverage*.json
@@ -41,6 +42,7 @@ project.fragment.lock.json
 # Local Configuration & Environment
 .env
 .env.*
+*Development.json
 
 # macOS
 .DS_Store
