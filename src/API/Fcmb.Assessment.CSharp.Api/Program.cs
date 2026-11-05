@@ -24,7 +24,9 @@ builder.Services.AddOpenApiInternal();
 
 builder.Services.AddApplication([
     AssemblyReference.Assembly,
-    Fcmb.Assessment.CSharp.Modules.Transactions.Application.AssemblyReference.Assembly
+    Fcmb.Assessment.CSharp.Modules.Users.Presentation.AssemblyReference.Assembly,
+    Fcmb.Assessment.CSharp.Modules.Transactions.Application.AssemblyReference.Assembly,
+    Fcmb.Assessment.CSharp.Modules.Transactions.Presentation.AssemblyReference.Assembly
 ]);
 
 builder.Configuration.AddModuleConfiguration(["users", "transactions"]);

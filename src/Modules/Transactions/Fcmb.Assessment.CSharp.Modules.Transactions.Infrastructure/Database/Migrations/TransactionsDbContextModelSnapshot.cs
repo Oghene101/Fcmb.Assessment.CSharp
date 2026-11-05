@@ -18,7 +18,7 @@ namespace Fcmb.Assessment.CSharp.Modules.Transactions.Infrastructure.Database.Mi
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("transactions")
-                .HasAnnotation("ProductVersion", "10.0.11")
+                .HasAnnotation("ProductVersion", "10.0.12")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -61,12 +61,21 @@ namespace Fcmb.Assessment.CSharp.Modules.Transactions.Infrastructure.Database.Mi
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTimeOffset?>("ClaimedUntil")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasColumnType("nvarchar(4000)");
 
                     b.Property<string>("Error")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Lane")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("varchar(50)")
+                        .HasDefaultValue("Default");
 
                     b.Property<DateTimeOffset?>("NextRetryOn")
                         .HasColumnType("datetimeoffset");
@@ -85,6 +94,10 @@ namespace Fcmb.Assessment.CSharp.Modules.Transactions.Infrastructure.Database.Mi
                         .HasColumnType("varchar(200)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Lane", "OccurredOn")
+                        .HasDatabaseName("IX_InboxMessages_Unprocessed")
+                        .HasFilter("[ProcessedOn] IS NULL");
 
                     b.ToTable("InboxMessages", "transactions");
                 });
@@ -141,12 +154,21 @@ namespace Fcmb.Assessment.CSharp.Modules.Transactions.Infrastructure.Database.Mi
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTimeOffset?>("ClaimedUntil")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasColumnType("nvarchar(4000)");
 
                     b.Property<string>("Error")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Lane")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("varchar(50)")
+                        .HasDefaultValue("Default");
 
                     b.Property<DateTimeOffset?>("NextRetryOn")
                         .HasColumnType("datetimeoffset");
@@ -165,6 +187,10 @@ namespace Fcmb.Assessment.CSharp.Modules.Transactions.Infrastructure.Database.Mi
                         .HasColumnType("varchar(200)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Lane", "OccurredOn")
+                        .HasDatabaseName("IX_OutboxMessages_Unprocessed")
+                        .HasFilter("[ProcessedOn] IS NULL");
 
                     b.ToTable("OutboxMessages", "transactions");
                 });

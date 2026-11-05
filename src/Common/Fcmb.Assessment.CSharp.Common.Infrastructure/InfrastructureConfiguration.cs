@@ -1,13 +1,11 @@
 using Fcmb.Assessment.CSharp.Common.Infrastructure.AuditLog;
 using Fcmb.Assessment.CSharp.Common.Infrastructure.Authentication;
 using Fcmb.Assessment.CSharp.Common.Infrastructure.Configurations;
-using Fcmb.Assessment.CSharp.Common.Infrastructure.Outbox;
 using MassTransit;
 using MassTransit.AzureServiceBusTransport;
 using MassTransit.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Npgsql;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -42,7 +40,6 @@ public static class InfrastructureConfiguration
 
             services.AddSingleton(TimeProvider.System);
 
-            services.TryAddSingleton<InsertOutboxMessagesInterceptor>();
             services.AddScoped<InsertAuditLogsInterceptor>();
 
             services.AddQuartz(quartz =>

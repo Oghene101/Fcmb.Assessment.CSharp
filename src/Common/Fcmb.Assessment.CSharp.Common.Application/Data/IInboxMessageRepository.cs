@@ -4,6 +4,13 @@ namespace Fcmb.Assessment.CSharp.Common.Application.Data;
 
 public interface IInboxMessageRepository
 {
-    Task<Guid[]> GetIdsAsync(int batchSize);
-    Task<InboxMessage?> GetByIdAsync(Guid id);
+    Task<Guid[]> ClaimAsync(
+        string lane,
+        int limit,
+        DateTimeOffset now,
+        DateTimeOffset claimedUntil);
+
+    Task<InboxMessage?> GetUnprocessedByIdAsync(Guid id);
+
+    Task<int> DeleteProcessedBeforeAsync(DateTimeOffset cutoff);
 }

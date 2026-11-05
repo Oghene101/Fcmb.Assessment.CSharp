@@ -1,4 +1,5 @@
 using Fcmb.Assessment.CSharp.Common.Application.Messaging;
+using Fcmb.Assessment.CSharp.Common.Domain;
 using Fcmb.Assessment.CSharp.Modules.Users.Domain.Users;
 using Fcmb.Assessment.CSharp.Modules.Users.IntegrationEvents;
 using MassTransit;
@@ -7,22 +8,22 @@ using IntegrationUserType = Fcmb.Assessment.CSharp.Modules.Users.IntegrationEven
 
 namespace Fcmb.Assessment.CSharp.Modules.Users.Application.Users;
 
-#pragma warning disable S3928
-#pragma warning disable CA2208
 internal sealed class UserSignedUpDomainEventHandler(
     IPublishEndpoint publishEndpoint) : IDomainEventHandler<UserSignedUpDomainEvent>
 {
-    public async Task Handle(UserSignedUpDomainEvent domainEvent, CancellationToken cancellationToken)
+    public async Task<Result> Handle(UserSignedUpDomainEvent domainEvent, CancellationToken cancellationToken)
     {
-        IntegrationUserType userType = domainEvent.UserType switch
+        IntegrationUserType? userType = domainEvent.UserType switch
         {
             DomainUserType.Individual => IntegrationUserType.Individual,
             DomainUserType.Corporate => IntegrationUserType.Corporate,
-            _ => throw new ArgumentOutOfRangeException(
-                nameof(domainEvent.UserType),
-                domainEvent.UserType,
-                "Unsupported domain user type.")
+            _ => null
         };
+
+        if (userType is null)
+        {
+            return UserErrors.UnsupportedUserType(domainEvent.UserType);
+        }
 
         await publishEndpoint.Publish(
             new UserSignedUpIntegrationEvent(
@@ -34,9 +35,9 @@ internal sealed class UserSignedUpDomainEventHandler(
                 domainEvent.Email,
                 domainEvent.PhoneNumber,
                 domainEvent.Dob,
-                userType
+                userType.Value
             ), cancellationToken);
+
+        return Result.Success();
     }
 }
-#pragma warning restore CA2208
-#pragma warning restore S3928

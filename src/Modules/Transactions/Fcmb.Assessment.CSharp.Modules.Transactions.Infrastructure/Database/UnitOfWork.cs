@@ -6,6 +6,7 @@ using Fcmb.Assessment.CSharp.Common.Infrastructure;
 using Fcmb.Assessment.CSharp.Common.Infrastructure.Inbox;
 using Fcmb.Assessment.CSharp.Common.Infrastructure.Outbox;
 using Fcmb.Assessment.CSharp.Modules.Transactions.Application.Data;
+using Fcmb.Assessment.CSharp.Modules.Transactions.Domain.Customers;
 using Fcmb.Assessment.CSharp.Modules.Transactions.Domain.Transactions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -72,6 +73,13 @@ internal sealed class UnitOfWork(
 
     public IRepository<DeadLetteredInboxMessage> DeadLetteredInboxMessagesWriteRepository =>
         field ??= new Repository<DeadLetteredInboxMessage, TransactionsDbContext>(context);
+
+    #endregion
+
+    #region Customers
+
+    public IRepository<Customer> CustomersWriteRepository =>
+        field ??= new Repository<Customer, TransactionsDbContext>(context);
 
     #endregion
 

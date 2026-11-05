@@ -7,7 +7,8 @@ using Newtonsoft.Json;
 
 namespace Fcmb.Assessment.CSharp.Common.Infrastructure.Outbox;
 
-public sealed class InsertOutboxMessagesInterceptor : SaveChangesInterceptor
+public sealed class InsertOutboxMessagesInterceptor(
+    Func<IDomainEvent, string> laneOf) : SaveChangesInterceptor
 {
     public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
         DbContextEventData eventData,
@@ -22,7 +23,7 @@ public sealed class InsertOutboxMessagesInterceptor : SaveChangesInterceptor
         return await base.SavingChangesAsync(eventData, result, cancellationToken);
     }
 
-    private static void InsertOutboxMessages(DbContext context)
+    private void InsertOutboxMessages(DbContext context)
     {
         OutboxMessage[] outboxMessages = context
             .ChangeTracker
@@ -40,6 +41,7 @@ public sealed class InsertOutboxMessagesInterceptor : SaveChangesInterceptor
             {
                 Id = domainEvent.Id,
                 Type = domainEvent.GetType().Name,
+                Lane = laneOf(domainEvent),
                 Content = JsonConvert.SerializeObject(domainEvent, SerializerSettings.Instance),
                 OccurredOn = domainEvent.OccurredOn
             })

@@ -11,7 +11,7 @@ A modular-monolith banking API built on **.NET 10** and orchestrated locally wit
 | Identity | Keycloak (JWT bearer auth, admin API via Refit) |
 | Persistence | EF Core 10 + SQL Server (one schema per module) |
 | Messaging | MassTransit on Azure Service Bus (emulator locally) |
-| Background jobs | Quartz.NET (outbox/inbox processors) |
+| Background jobs | Outbox/inbox lane processors (hosted services), Quartz.NET (processed-message purge) |
 | Validation | FluentValidation (applied via a decorator) |
 | Resilience | `Microsoft.Extensions.Http.Resilience` (retry, circuit breaker, timeouts) |
 | Observability | Serilog, OpenTelemetry (OTLP traces and logs), health checks |
@@ -42,10 +42,10 @@ Each module follows Clean Architecture layering and owns its own `DbContext` and
 
 1. A domain entity raises a domain event (such as `User.Create` raising `UserSignedUpDomainEvent`).
 2. `InsertOutboxMessagesInterceptor` saves the event to the module's outbox table in the same transaction.
-3. A Quartz `ProcessOutboxJob` dispatches outbox messages to domain event handlers, which publish integration events through MassTransit to the `domain-events-topic`.
-4. Consumers write incoming events to the receiving module's inbox, and `ProcessInboxJob` hands them to idempotent integration event handlers.
+3. An outbox lane processor claims outbox messages with a lease and dispatches them to domain event handlers, which publish integration events through MassTransit to the `domain-events-topic`.
+4. Consumers write incoming events to the receiving module's inbox, and an inbox lane processor hands them to idempotent integration event handlers.
 
-Retries and dead-lettering apply to both outbox and inbox. You configure them per module in `modules.<name>.json`.
+Each module splits its outbox and inbox into lanes, each with its own concurrency, poll interval and retries. A handler failure of type `Dependency`, or an exception, is retried with exponential backoff; any other failure is dead-lettered at once. Processed messages keep no content and are purged after `RetentionDays`. You configure all of this per module in `modules.<name>.json`.
 
 ## Prerequisites
 

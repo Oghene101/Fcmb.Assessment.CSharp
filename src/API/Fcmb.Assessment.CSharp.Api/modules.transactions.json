@@ -1,16 +1,30 @@
 {
   "Transactions": {
     "Outbox": {
-      "IntervalInSeconds": 15,
-      "BatchSize": 20,
-      "MaxRetries": 3,
-      "RetryDelaySeconds": 30
+      "LeaseSeconds": 120,
+      "RetentionDays": 7,
+      "PurgeIntervalMinutes": 60,
+      "Lanes": {
+        "Default": {
+          "Concurrency": 4,
+          "PollIntervalMilliseconds": 500,
+          "MaxRetries": 3,
+          "RetryDelaySeconds": 30
+        }
+      }
     },
     "Inbox": {
-      "IntervalInSeconds": 15,
-      "BatchSize": 20,
-      "MaxRetries": 3,
-      "RetryDelaySeconds": 30
+      "LeaseSeconds": 120,
+      "RetentionDays": 30,
+      "PurgeIntervalMinutes": 60,
+      "Lanes": {
+        "Default": {
+          "Concurrency": 4,
+          "PollIntervalMilliseconds": 500,
+          "MaxRetries": 3,
+          "RetryDelaySeconds": 30
+        }
+      }
     }
   }
 }

@@ -1,10 +1,11 @@
 using Fcmb.Assessment.CSharp.Common.Application.Inbox;
+using Fcmb.Assessment.CSharp.Common.Infrastructure.Messaging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Fcmb.Assessment.CSharp.Common.Infrastructure.Inbox;
 
-internal sealed class OutboxMessageConfiguration : IEntityTypeConfiguration<InboxMessage>
+internal sealed class InboxMessageConfiguration : IEntityTypeConfiguration<InboxMessage>
 {
     public void Configure(EntityTypeBuilder<InboxMessage> builder)
     {
@@ -12,6 +13,11 @@ internal sealed class OutboxMessageConfiguration : IEntityTypeConfiguration<Inbo
 
         builder.Property(a => a.Type)
             .HasColumnType("varchar(200)")
+            .IsRequired();
+
+        builder.Property(a => a.Lane)
+            .HasColumnType("varchar(50)")
+            .HasDefaultValue(MessageLanes.Default)
             .IsRequired();
 
         builder.Property(a => a.Content)
@@ -23,5 +29,9 @@ internal sealed class OutboxMessageConfiguration : IEntityTypeConfiguration<Inbo
 
         builder.Property(a => a.RetryCount)
             .IsRequired();
+
+        builder.HasIndex(a => new { a.Lane, a.OccurredOn })
+            .HasFilter("[ProcessedOn] IS NULL")
+            .HasDatabaseName("IX_InboxMessages_Unprocessed");
     }
 }
