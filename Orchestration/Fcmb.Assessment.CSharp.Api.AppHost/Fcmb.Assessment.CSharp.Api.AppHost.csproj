@@ -8,6 +8,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\src\API\Fcmb.Assessment.CSharp.Api\Fcmb.Assessment.CSharp.Api.csproj" />
+      <ProjectReference Include="..\..\src\API\Fcmb.Assessment.CSharp.Gateway\Fcmb.Assessment.CSharp.Gateway.csproj" />
     </ItemGroup>
 
     <ItemGroup>

@@ -1,0 +1,16 @@
+@Fcmb.Assessment.CSharp.Gateway_HostAddress = http://localhost:5026
+
+POST {{Fcmb.Assessment.CSharp.Gateway_HostAddress}}/api/v1/users/sign-up
+Content-Type: application/json
+
+{
+  "firstName": "Ada",
+  "lastName": "Obi",
+  "phoneNumber": "08012345678",
+  "dob": "1990-01-01",
+  "userType": 0,
+  "email": "ada.obi@example.com",
+  "password": "Passw0rd!"
+}
+
+###

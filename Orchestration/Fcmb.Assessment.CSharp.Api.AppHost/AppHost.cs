@@ -17,10 +17,16 @@ IResourceBuilder<AzureServiceBusResource> serviceBus =
                     targetPort: 5300,
                     name: "emulatorhealth"));
 
-builder.AddProject<Fcmb_Assessment_CSharp_Api>("fcmb-assessment-csharp-api")
+IResourceBuilder<ProjectResource> api = builder.AddProject<Fcmb_Assessment_CSharp_Api>("fcmb-assessment-csharp-api")
     .WithReference(keycloak)
     .WaitFor(keycloak)
     .WithReference(serviceBus)
     .WaitFor(serviceBus);
+
+builder.AddProject<Fcmb_Assessment_CSharp_Gateway>("fcmb-assessment-csharp-gateway")
+    .WithReference(api)
+    .WaitFor(api)
+    .WithReference(keycloak)
+    .WaitFor(keycloak);
 
 await builder.Build().RunAsync();
