@@ -19,6 +19,7 @@
         <PackageReference Include="OpenTelemetry.Instrumentation.Http"/>
         <PackageReference Include="OpenTelemetry.Instrumentation.StackExchangeRedis"/>
         <PackageReference Include="Quartz"/>
+        <PackageReference Include="System.Security.Cryptography.Pkcs"/>
     </ItemGroup>
     
     <ItemGroup>
