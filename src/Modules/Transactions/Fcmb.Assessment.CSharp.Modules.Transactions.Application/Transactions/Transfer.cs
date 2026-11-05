@@ -38,6 +38,8 @@ public static class TransferUseCase
 
             await uOw.TransactionsWriteRepository.AddAsync(tr, cancellationToken);
 
+            await uOw.SaveChangesAsync(cancellationToken);
+
             op.Complete();
             return Result.Success();
         }
