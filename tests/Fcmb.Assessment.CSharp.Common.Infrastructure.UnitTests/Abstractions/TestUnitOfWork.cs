@@ -37,6 +37,8 @@ internal sealed class TestUnitOfWork(
     public IRepository<DeadLetteredInboxMessage> DeadLetteredInboxMessagesWriteRepository { get; } =
         new Repository<DeadLetteredInboxMessage, MessagingTestDbContext>(db);
 
+    public IAuditLogPartitionRepository AuditLogPartitionsRepository { get; } = new NoAuditLogPartitions();
+
     public Task BeginTransactionAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
 
     public Task CommitTransactionAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
@@ -45,4 +47,14 @@ internal sealed class TestUnitOfWork(
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) =>
         db.SaveChangesAsync(cancellationToken);
+}
+
+// The in-memory provider has no partitions; the messaging tests never maintain any.
+file sealed class NoAuditLogPartitions : IAuditLogPartitionRepository
+{
+    public Task CreateMonthsAheadAsync(
+        DateTimeOffset currentMonth,
+        int monthsAhead) => Task.CompletedTask;
+
+    public Task<int> DropMonthsBeforeAsync(DateTimeOffset keepFrom) => Task.FromResult(0);
 }

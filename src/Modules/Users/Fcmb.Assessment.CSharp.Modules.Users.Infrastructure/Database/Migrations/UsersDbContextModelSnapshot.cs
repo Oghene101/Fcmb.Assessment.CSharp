@@ -212,8 +212,10 @@ namespace Fcmb.Assessment.CSharp.Modules.Users.Infrastructure.Database.Migration
             modelBuilder.Entity("Fcmb.Assessment.CSharp.Common.Infrastructure.AuditLog.AuditLog", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("OccurredOn")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Action")
                         .IsRequired()
@@ -230,20 +232,11 @@ namespace Fcmb.Assessment.CSharp.Modules.Users.Infrastructure.Database.Migration
                         .IsRequired()
                         .HasColumnType("varchar(50)");
 
-                    b.Property<DateTimeOffset>("OccurredOn")
-                        .HasColumnType("datetimeoffset");
-
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("varchar(50)");
 
-                    b.HasKey("Id");
-
-                    b.HasIndex("OccurredOn");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("EntityName", "EntityId");
+                    b.HasKey("Id", "OccurredOn");
 
                     b.ToTable("AuditLogs", "users");
                 });

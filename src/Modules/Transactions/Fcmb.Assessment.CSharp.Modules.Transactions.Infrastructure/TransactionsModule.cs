@@ -23,6 +23,7 @@ public static class TransactionsModule
     private const string Module = "Transactions";
     private const string OutboxSettingsPath = "Transactions:Outbox";
     private const string InboxSettingsPath = "Transactions:Inbox";
+    private const string AuditLogSettingsPath = "Transactions:AuditLogs";
 
     extension(IServiceCollection services)
     {
@@ -41,6 +42,8 @@ public static class TransactionsModule
                 InboxSettingsPath,
                 InboxLanes.All,
                 AssemblyReference.Assembly);
+
+            services.AddAuditLogPartitions<IUnitOfWork>(Module, AuditLogSettingsPath);
 
             services.AddEndpoints(AssemblyReference.Assembly);
 
@@ -75,6 +78,12 @@ public static class TransactionsModule
                 .Get<InboxSettings>()!;
 
             quartz.AddMessagePurgeJobs<IUnitOfWork>(Module, outbox, inbox);
+
+            AuditLogSettings auditLogs = configuration
+                .GetSection(AuditLogSettingsPath)
+                .Get<AuditLogSettings>()!;
+
+            quartz.AddAuditLogPartitionsJob<IUnitOfWork>(Module, auditLogs);
         }
 
         public static void ConfigureConsumers(

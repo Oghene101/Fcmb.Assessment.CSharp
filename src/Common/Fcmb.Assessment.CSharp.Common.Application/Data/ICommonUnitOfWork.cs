@@ -15,6 +15,7 @@ public interface ICommonUnitOfWork
     IInboxMessageConsumerRepository InboxMessageConsumersReadRepository { get; }
     IRepository<InboxMessageConsumer> InboxMessageConsumersWriteRepository { get; }
     IRepository<DeadLetteredInboxMessage> DeadLetteredInboxMessagesWriteRepository { get; }
+    IAuditLogPartitionRepository AuditLogPartitionsRepository { get; }
 
     Task BeginTransactionAsync(CancellationToken cancellationToken = default);
     Task CommitTransactionAsync(CancellationToken cancellationToken = default);

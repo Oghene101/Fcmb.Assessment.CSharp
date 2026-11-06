@@ -25,6 +25,11 @@
           "RetryDelaySeconds": 30
         }
       }
+    },
+    "AuditLogs": {
+      "RetentionMonths": 0,
+      "PartitionMonthsAhead": 2,
+      "PartitionJobIntervalMinutes": 1440
     }
   }
 }

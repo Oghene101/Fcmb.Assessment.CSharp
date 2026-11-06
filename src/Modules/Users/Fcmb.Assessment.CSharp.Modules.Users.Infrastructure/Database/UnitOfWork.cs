@@ -3,6 +3,7 @@ using Fcmb.Assessment.CSharp.Common.Application.Data;
 using Fcmb.Assessment.CSharp.Common.Application.Inbox;
 using Fcmb.Assessment.CSharp.Common.Application.Outbox;
 using Fcmb.Assessment.CSharp.Common.Infrastructure;
+using Fcmb.Assessment.CSharp.Common.Infrastructure.AuditLog;
 using Fcmb.Assessment.CSharp.Common.Infrastructure.Inbox;
 using Fcmb.Assessment.CSharp.Common.Infrastructure.Outbox;
 using Fcmb.Assessment.CSharp.Modules.Users.Application.Data;
@@ -76,6 +77,13 @@ internal sealed class UnitOfWork(
 
     public IRepository<DeadLetteredInboxMessage> DeadLetteredInboxMessagesWriteRepository =>
         field ??= new Repository<DeadLetteredInboxMessage, UsersDbContext>(context);
+
+    #endregion
+
+    #region AuditLogPartitions
+
+    public IAuditLogPartitionRepository AuditLogPartitionsRepository =>
+        field ??= new AuditLogPartitionRepository(Schemas.Users, DbConnection, DbTransaction);
 
     #endregion
 

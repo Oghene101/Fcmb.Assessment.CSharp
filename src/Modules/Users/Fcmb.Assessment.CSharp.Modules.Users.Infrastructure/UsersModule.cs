@@ -30,6 +30,7 @@ public static class UsersModule
     private const string Module = "Users";
     private const string OutboxSettingsPath = "Users:Outbox";
     private const string InboxSettingsPath = "Users:Inbox";
+    private const string AuditLogSettingsPath = "Users:AuditLogs";
 
     extension(IServiceCollection services)
     {
@@ -50,6 +51,8 @@ public static class UsersModule
                 InboxSettingsPath,
                 InboxLanes.All,
                 AssemblyReference.Assembly);
+
+            services.AddAuditLogPartitions<IUnitOfWork>(Module, AuditLogSettingsPath);
 
             services.AddEndpoints(AssemblyReference.Assembly);
 
@@ -100,6 +103,12 @@ public static class UsersModule
                 .Get<InboxSettings>()!;
 
             quartz.AddMessagePurgeJobs<IUnitOfWork>(Module, outbox, inbox);
+
+            AuditLogSettings auditLogs = configuration
+                .GetSection(AuditLogSettingsPath)
+                .Get<AuditLogSettings>()!;
+
+            quartz.AddAuditLogPartitionsJob<IUnitOfWork>(Module, auditLogs);
         }
 
         public static void ConfigureConsumers(
