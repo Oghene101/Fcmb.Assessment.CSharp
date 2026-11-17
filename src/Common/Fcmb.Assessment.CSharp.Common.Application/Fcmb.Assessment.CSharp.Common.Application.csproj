@@ -5,7 +5,6 @@
   <ItemGroup>
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
       <PackageReference Include="MassTransit.Abstractions"/>
-      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions"/>
       <PackageReference Include="Refit.HttpClientFactory"/>
       <PackageReference Include="Scrutor"/>
       <PackageReference Include="Serilog"/>

@@ -1,15 +1,15 @@
 # FCMB Assessment – C#
 
-A modular-monolith banking API built on **.NET 10** and orchestrated locally with **.NET Aspire**. It handles user sign-up (backed by Keycloak for identity) and fund transfers, with a customer rewards engine, and modules that talk to each other through the transactional outbox/inbox pattern over Azure Service Bus.
+A modular-monolith banking API built on **.NET 11** and orchestrated locally with **.NET Aspire**. It handles user sign-up (backed by Keycloak for identity) and fund transfers, with a customer rewards engine, and modules that talk to each other through the transactional outbox/inbox pattern over Azure Service Bus.
 
 ## Tech stack
 
 | Concern | Technology |
 | --- | --- |
-| Runtime | .NET 10, ASP.NET Core Minimal APIs |
+| Runtime | .NET 11, ASP.NET Core Minimal APIs |
 | Orchestration | .NET Aspire 13 (AppHost) |
 | Identity | Keycloak (JWT bearer auth, admin API via Refit) |
-| Persistence | EF Core 10 + SQL Server (one schema per module) |
+| Persistence | EF Core 11 + SQL Server (one schema per module) |
 | Messaging | MassTransit on Azure Service Bus (emulator locally) |
 | Background jobs | Outbox/inbox lane processors (hosted services), Quartz.NET (processed-message purge) |
 | Validation | FluentValidation (applied via a decorator) |
@@ -49,7 +49,7 @@ Each module splits its outbox and inbox into lanes, each with its own concurrenc
 
 ## Prerequisites
 
-- [.NET 10 SDK](https://dotnet.microsoft.com/download)
+- [.NET 11 SDK](https://dotnet.microsoft.com/download)
 - Docker (for the Keycloak and Azure Service Bus emulator containers)
 - A reachable SQL Server instance (the AppHost does **not** provision one)
 - Optional: the Aspire CLI (`dotnet tool install -g aspire.cli`)

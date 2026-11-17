@@ -85,7 +85,7 @@ public sealed class AuditLogPartitionsTests(
     {
         var entityId = Guid.CreateVersion7();
 
-        await TransactionsDbContext.Database.ExecuteSqlInterpolatedAsync(
+        await TransactionsDbContext.Database.ExecuteSqlAsync(
             $"""
              INSERT INTO transactions.AuditLogs (Id, Action, UserId, EntityName, EntityId, OccurredOn, Changes)
              VALUES ({Guid.CreateVersion7()}, 'Added', 'system', 'Test', {entityId}, {occurredOn}, 'test')
