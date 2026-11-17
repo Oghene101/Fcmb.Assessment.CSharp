@@ -7,4 +7,4 @@ public sealed record KeyCloakCreateUserRequest(
     string LastName,
     bool EmailVerified,
     bool Enabled,
-    KeyCloakCredentials[] Credentials);
+    IReadOnlyList<KeyCloakCredentials> Credentials);
