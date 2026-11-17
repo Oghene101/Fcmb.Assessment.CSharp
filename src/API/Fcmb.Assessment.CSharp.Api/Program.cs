@@ -1,6 +1,7 @@
 using Fcmb.Assessment.CSharp.Api.Extensions;
 using Fcmb.Assessment.CSharp.Api.Infrastructure.Observability;
 using Fcmb.Assessment.CSharp.Api.Middleware;
+using Fcmb.Assessment.CSharp.Api.OpenApi;
 using Fcmb.Assessment.CSharp.Common.Application;
 using Fcmb.Assessment.CSharp.Common.Infrastructure;
 using Fcmb.Assessment.CSharp.Common.Presentation.Extensions;
@@ -72,7 +73,7 @@ if (app.Environment.IsDevelopment())
             .SortOperationsByMethod()
             .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient)
 #pragma warning disable S3878
-            .AddPreferredSecuritySchemes("Bearer");
+            .AddPreferredSecuritySchemes(OAuth2SecuritySchemeTransformer.SchemeName);
 #pragma warning restore S3878
 
         options.AddDocument("v1", "FCMB Assessment - C#", "/openapi/v1.json");

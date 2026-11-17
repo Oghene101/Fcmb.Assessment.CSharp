@@ -10,6 +10,8 @@ internal sealed class OAuth2SecuritySchemeTransformer(
     IAuthenticationSchemeProvider authenticationSchemeProvider,
     IOptions<KeyCloakSettings> keyCloak) : IOpenApiDocumentTransformer
 {
+    public const string SchemeName = "Keycloak";
+
     private readonly KeyCloakSettings _keyCloak = keyCloak.Value;
 
     public async Task TransformAsync(OpenApiDocument document, OpenApiDocumentTransformerContext context,
@@ -22,7 +24,7 @@ internal sealed class OAuth2SecuritySchemeTransformer(
         {
             var securitySchemes = new Dictionary<string, IOpenApiSecurityScheme>
             {
-                ["Keycloak"] = new OpenApiSecurityScheme
+                [SchemeName] = new OpenApiSecurityScheme
                 {
                     Type = SecuritySchemeType.OAuth2,
                     Description = "Keycloak OpenID Connect Authentication",
@@ -51,7 +53,7 @@ internal sealed class OAuth2SecuritySchemeTransformer(
                 operation.Value.Security ??= [];
                 operation.Value.Security.Add(new OpenApiSecurityRequirement
                 {
-                    [new OpenApiSecuritySchemeReference("Keycloak", document)] = ["openid", "profile"]
+                    [new OpenApiSecuritySchemeReference(SchemeName, document)] = ["openid", "profile"]
                 });
             }
         }
