@@ -16,6 +16,8 @@ public sealed class PurgeProcessedInboxMessagesJob<TUnitOfWork>(
     ILogger<PurgeProcessedInboxMessagesJob<TUnitOfWork>> logger) : IJob
     where TUnitOfWork : ICommonUnitOfWork
 {
+    private const int PurgeBatchSize = 5_000;
+
     public async ValueTask Execute(
         IJobExecutionContext context,
         CancellationToken cancellationToken = new())
@@ -29,7 +31,17 @@ public sealed class PurgeProcessedInboxMessagesJob<TUnitOfWork>(
 
         DateTimeOffset cutoff = now.AddDays(-inbox.RetentionDays);
 
-        int purgedInboxMessages = await uOw.InboxMessagesReadRepository.DeleteProcessedBeforeAsync(cutoff);
+        int purgedInboxMessages = 0;
+
+        int purgedInBatch;
+
+        do
+        {
+            purgedInBatch = await uOw.InboxMessagesReadRepository.DeleteProcessedBeforeAsync(cutoff, PurgeBatchSize);
+
+            purgedInboxMessages += purgedInBatch;
+        }
+        while (purgedInBatch == PurgeBatchSize);
 
         logger.LogInformation("Purged {PurgedCount} {Module} inbox messages processed before {Cutoff}",
             purgedInboxMessages, module.Name, cutoff);

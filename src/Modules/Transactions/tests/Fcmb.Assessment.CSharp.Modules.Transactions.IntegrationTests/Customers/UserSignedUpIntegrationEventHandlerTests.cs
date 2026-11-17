@@ -1,6 +1,7 @@
 using Fcmb.Assessment.CSharp.Common.Application.Inbox;
 using Fcmb.Assessment.CSharp.Common.Application.Messaging;
 using Fcmb.Assessment.CSharp.Common.Domain;
+using Fcmb.Assessment.CSharp.Modules.Transactions.Application.Data;
 using Fcmb.Assessment.CSharp.Modules.Transactions.Domain.Customers;
 using Fcmb.Assessment.CSharp.Modules.Transactions.IntegrationTests.Abstractions;
 using Fcmb.Assessment.CSharp.Modules.Users.IntegrationEvents;
@@ -120,6 +121,7 @@ public sealed class UserSignedUpIntegrationEventHandlerTests(
         customers.ShouldBe(1);
     }
 
+    // A success is saved with its handled-record, as the inbox processor does.
     private async Task<Result> HandleInItsOwnScopeAsync(UserSignedUpIntegrationEvent signedUp)
     {
         await using AsyncServiceScope scope = ServiceProvider.CreateAsyncScope();
@@ -127,7 +129,16 @@ public sealed class UserSignedUpIntegrationEventHandlerTests(
         IIntegrationEventHandler<UserSignedUpIntegrationEvent> handler =
             scope.ServiceProvider.GetRequiredService<IIntegrationEventHandler<UserSignedUpIntegrationEvent>>();
 
-        return await handler.Handle(signedUp, CancellationToken);
+        IUnitOfWork uOw = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+
+        Result handled = await handler.Handle(signedUp, CancellationToken);
+
+        if (handled.IsSuccess)
+        {
+            await uOw.SaveChangesAsync(CancellationToken);
+        }
+
+        return handled;
     }
 
     private Task<Customer?> FindCustomerAsync(string email) =>

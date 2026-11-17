@@ -124,6 +124,38 @@ public sealed class OutboxMessageProcessorTests
     }
 
     [Fact]
+    public async Task AHandledMessage_IsRecordedAsHandled_InTheSameSaveAsItsOutcome()
+    {
+        var handler = new RecordingHandler();
+        await using var harness = MessagingHarness.BuildIdempotent(handler);
+        OutboxMessage written = await harness.WriteOutboxMessageAsync();
+
+        await harness.OutboxProcessor.ProcessAsync(written.Id, MessagingHarness.Lane, Token);
+
+        OutboxMessage? storedOutboxMessage = await harness.StoredOutboxMessageAsync(written.Id);
+        storedOutboxMessage.ShouldNotBeNull();
+        storedOutboxMessage.ProcessedOn.ShouldBe(MessagingHarness.Now);
+        bool handled = await harness.OutboxMessageHandledAsync(written.Id);
+        handled.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task AFailedMessage_KeepsNoHandledRecord_SoEveryHandlerRunsAgainOnTheRetry()
+    {
+        var handlerBeforeTheFailure = new RecordingHandler();
+        await using var harness = MessagingHarness.BuildIdempotent(handlerBeforeTheFailure,
+            new RecordingHandler(BrokerDown));
+        OutboxMessage written = await harness.WriteOutboxMessageAsync();
+
+        await harness.OutboxProcessor.ProcessAsync(written.Id, MessagingHarness.Lane, Token);
+        await harness.OutboxProcessor.ProcessAsync(written.Id, MessagingHarness.Lane, Token);
+
+        bool handled = await harness.OutboxMessageHandledAsync(written.Id);
+        handled.ShouldBeFalse();
+        handlerBeforeTheFailure.Calls.ShouldBe(2);
+    }
+
+    [Fact]
     public async Task AnAlreadyProcessedMessage_IsLeftAlone()
     {
         var handler = new RecordingHandler();

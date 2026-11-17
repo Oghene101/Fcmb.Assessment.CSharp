@@ -7,6 +7,8 @@ namespace Fcmb.Assessment.CSharp.Common.Infrastructure.Inbox;
 
 internal sealed class InboxMessageConfiguration : IEntityTypeConfiguration<InboxMessage>
 {
+    private const int QueueFillFactor = 80;
+
     public void Configure(EntityTypeBuilder<InboxMessage> builder)
     {
         builder.ToTable("InboxMessages");
@@ -30,8 +32,23 @@ internal sealed class InboxMessageConfiguration : IEntityTypeConfiguration<Inbox
         builder.Property(a => a.RetryCount)
             .IsRequired();
 
-        builder.HasIndex(a => new { a.Lane, a.OccurredOn })
+        // Unaffected by a claim, so a lease never moves the row in the index; retry times change only on failure.
+        builder.Property(a => a.AvailableOn)
+            .HasComputedColumnSql("COALESCE([NextRetryOn], [OccurredOn])", stored: true);
+
+        // Claims update rows in place and retries move them, so pages keep room to absorb both without splitting.
+        builder.HasKey(a => a.Id)
+            .HasFillFactor(QueueFillFactor);
+
+        // Ordered by availability, a claim stops at the first message not yet due instead of reading past every
+        // message waiting on a retry.
+        builder.HasIndex(a => new { a.Lane, a.AvailableOn })
             .HasFilter("[ProcessedOn] IS NULL")
+            .HasFillFactor(QueueFillFactor)
             .HasDatabaseName("IX_InboxMessages_Unprocessed");
+
+        builder.HasIndex(a => a.ProcessedOn)
+            .HasFilter("[ProcessedOn] IS NOT NULL")
+            .HasDatabaseName("IX_InboxMessages_Processed");
     }
 }

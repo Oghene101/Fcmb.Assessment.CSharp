@@ -24,6 +24,8 @@ public static class MessagingConfiguration
         {
             services.TryAddSingleton(new MessagingModule<TUnitOfWork>(module));
 
+            services.TryAddSingleton(new OutboxWakeUps<TUnitOfWork>(lanes));
+
             string requiredLanes = string.Join(", ", lanes);
 
             services.AddOptions<OutboxSettings>(module)
@@ -34,7 +36,8 @@ public static class MessagingConfiguration
                     $"{settingsPath}:LeaseSeconds, RetentionDays and PurgeIntervalMinutes must be positive.")
                 .Validate(settings => HasEveryLane(settings.Lanes, lanes),
                     $"{settingsPath}:Lanes needs {requiredLanes}, each with a positive Concurrency, "
-                    + "PollIntervalMilliseconds and MaxRetries.")
+                    + "PollIntervalMilliseconds and MaxRetries, and a MaxPollIntervalMilliseconds no shorter than "
+                    + "PollIntervalMilliseconds.")
                 .ValidateOnStart();
 
             services.DecorateHandlers(
@@ -74,6 +77,8 @@ public static class MessagingConfiguration
         {
             services.TryAddSingleton(new MessagingModule<TUnitOfWork>(module));
 
+            services.TryAddSingleton(new InboxWakeUps<TUnitOfWork>(lanes));
+
             string requiredLanes = string.Join(", ", lanes);
 
             services.AddOptions<InboxSettings>(module)
@@ -84,7 +89,8 @@ public static class MessagingConfiguration
                     $"{settingsPath}:LeaseSeconds, RetentionDays and PurgeIntervalMinutes must be positive.")
                 .Validate(settings => HasEveryLane(settings.Lanes, lanes),
                     $"{settingsPath}:Lanes needs {requiredLanes}, each with a positive Concurrency, "
-                    + "PollIntervalMilliseconds and MaxRetries.")
+                    + "PollIntervalMilliseconds and MaxRetries, and a MaxPollIntervalMilliseconds no shorter than "
+                    + "PollIntervalMilliseconds.")
                 .ValidateOnStart();
 
             services.DecorateHandlers(
@@ -150,6 +156,7 @@ public static class MessagingConfiguration
             MessageLaneSettings? laneSettings = configuredLanes.GetValueOrDefault(lane);
 
             return laneSettings is { Concurrency: > 0, PollIntervalMilliseconds: > 0, MaxRetries: > 0 }
-                   && laneSettings.RetryDelaySeconds >= 0;
+                   && laneSettings.RetryDelaySeconds >= 0
+                   && laneSettings.MaxPollIntervalMilliseconds >= laneSettings.PollIntervalMilliseconds;
         });
 }

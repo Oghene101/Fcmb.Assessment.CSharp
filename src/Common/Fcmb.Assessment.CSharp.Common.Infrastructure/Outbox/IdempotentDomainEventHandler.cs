@@ -5,6 +5,7 @@ using Fcmb.Assessment.CSharp.Common.Domain;
 
 namespace Fcmb.Assessment.CSharp.Common.Infrastructure.Outbox;
 
+// The handled-record is saved by OutboxMessageProcessor together with the message's outcome, sparing a commit per handler.
 public sealed class IdempotentDomainEventHandler<TDomainEvent, TUnitOfWork>(
     IDomainEventHandler<TDomainEvent> decorated,
     TUnitOfWork uOw)
@@ -37,8 +38,6 @@ public sealed class IdempotentDomainEventHandler<TDomainEvent, TUnitOfWork>(
                 domainEvent.Id,
                 consumerName),
             cancellationToken);
-
-        await uOw.SaveChangesAsync(cancellationToken);
 
         return handled;
     }

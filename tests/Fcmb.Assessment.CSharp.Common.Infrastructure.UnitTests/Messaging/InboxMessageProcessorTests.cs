@@ -124,6 +124,38 @@ public sealed class InboxMessageProcessorTests
     }
 
     [Fact]
+    public async Task AHandledMessage_IsRecordedAsHandled_InTheSameSaveAsItsOutcome()
+    {
+        var handler = new RecordingHandler();
+        await using var harness = MessagingHarness.BuildIdempotent(handler);
+        InboxMessage written = await harness.WriteInboxMessageAsync();
+
+        await harness.InboxProcessor.ProcessAsync(written.Id, MessagingHarness.Lane, Token);
+
+        InboxMessage? storedInboxMessage = await harness.StoredInboxMessageAsync(written.Id);
+        storedInboxMessage.ShouldNotBeNull();
+        storedInboxMessage.ProcessedOn.ShouldBe(MessagingHarness.Now);
+        bool handled = await harness.InboxMessageHandledAsync(written.Id);
+        handled.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task AFailedMessage_KeepsNoHandledRecord_SoEveryHandlerRunsAgainOnTheRetry()
+    {
+        var handlerBeforeTheFailure = new RecordingHandler();
+        await using var harness = MessagingHarness.BuildIdempotent(handlerBeforeTheFailure,
+            new RecordingHandler(BrokerDown));
+        InboxMessage written = await harness.WriteInboxMessageAsync();
+
+        await harness.InboxProcessor.ProcessAsync(written.Id, MessagingHarness.Lane, Token);
+        await harness.InboxProcessor.ProcessAsync(written.Id, MessagingHarness.Lane, Token);
+
+        bool handled = await harness.InboxMessageHandledAsync(written.Id);
+        handled.ShouldBeFalse();
+        handlerBeforeTheFailure.Calls.ShouldBe(2);
+    }
+
+    [Fact]
     public async Task AnAlreadyProcessedMessage_IsLeftAlone()
     {
         var handler = new RecordingHandler();

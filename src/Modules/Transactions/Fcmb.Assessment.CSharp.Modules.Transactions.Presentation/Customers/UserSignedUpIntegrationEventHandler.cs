@@ -6,7 +6,7 @@ using Fcmb.Assessment.CSharp.Modules.Users.IntegrationEvents;
 
 namespace Fcmb.Assessment.CSharp.Modules.Transactions.Presentation.Customers;
 
-// Saved by the idempotent decorator together with the record that this event was handled.
+// Saved by the inbox processor together with the record that this event was handled.
 internal sealed class UserSignedUpIntegrationEventHandler(
     IUnitOfWork uOw)
     : IIntegrationEventHandler<UserSignedUpIntegrationEvent>

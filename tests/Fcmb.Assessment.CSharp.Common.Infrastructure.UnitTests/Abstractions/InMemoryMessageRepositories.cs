@@ -17,7 +17,7 @@ internal sealed class InMemoryOutboxMessageRepository(
             .AsNoTracking()
             .SingleOrDefaultAsync(message => message.Id == id && message.ProcessedOn == null);
 
-    public Task<int> DeleteProcessedBeforeAsync(DateTimeOffset cutoff) =>
+    public Task<int> DeleteProcessedBeforeAsync(DateTimeOffset cutoff, int batchSize) =>
         throw new NotSupportedException("Purging is SQL Server specific and covered end to end.");
 
     public Task<bool> OutboxMessageConsumerExistsAsync(Guid outboxMessageId, string name) =>
@@ -36,7 +36,7 @@ internal sealed class InMemoryInboxMessageRepository(
             .AsNoTracking()
             .SingleOrDefaultAsync(message => message.Id == id && message.ProcessedOn == null);
 
-    public Task<int> DeleteProcessedBeforeAsync(DateTimeOffset cutoff) =>
+    public Task<int> DeleteProcessedBeforeAsync(DateTimeOffset cutoff, int batchSize) =>
         throw new NotSupportedException("Purging is SQL Server specific and covered end to end.");
 
     public Task<bool> InboxMessageConsumerExistsAsync(Guid inboxMessageId, string name) =>

@@ -11,8 +11,9 @@ using Newtonsoft.Json;
 
 namespace Fcmb.Assessment.CSharp.Common.Infrastructure.Inbox;
 
-// Handlers run in one scope and the outcome is recorded in a fresh one, so whatever a failed handler left
-// tracked is never saved with it. The claim's lease, not a lock, keeps other processors away meanwhile.
+// Handlers run in one scope, and on success their work, their handled-records and the processed message are saved
+// together. A failure is recorded in a fresh scope, so whatever a failed handler left tracked is never saved with it,
+// and every handler runs again on the retry. The claim's lease, not a lock, keeps other processors away meanwhile.
 public sealed class InboxMessageProcessor<TUnitOfWork>(
     MessagingModule<TUnitOfWork> module,
     IServiceScopeFactory serviceScopeFactory,
@@ -28,46 +29,47 @@ public sealed class InboxMessageProcessor<TUnitOfWork>(
         MessageLaneSettings laneSettings,
         CancellationToken cancellationToken)
     {
-        HandledInboxMessage? handledInboxMessage = await HandleAsync(inboxMessageId, cancellationToken);
+        await using AsyncServiceScope handlingScope = serviceScopeFactory.CreateAsyncScope();
+        TUnitOfWork handlingUnitOfWork = handlingScope.ServiceProvider.GetRequiredService<TUnitOfWork>();
 
-        if (handledInboxMessage is null)
+        InboxMessage? inboxMessage = await handlingUnitOfWork.InboxMessagesReadRepository.GetUnprocessedByIdAsync(
+            inboxMessageId);
+
+        if (inboxMessage is null)
         {
             return;
         }
 
-        await RecordOutcomeAsync(handledInboxMessage, laneSettings, cancellationToken);
-    }
+        Result outcome = await HandleAsync(handlingScope.ServiceProvider, inboxMessage, cancellationToken);
 
-    private sealed record HandledInboxMessage(
-        InboxMessage InboxMessage,
-        Result Outcome);
-
-    private async Task<HandledInboxMessage?> HandleAsync(
-        Guid inboxMessageId,
-        CancellationToken cancellationToken)
-    {
-        await using AsyncServiceScope handlingScope = serviceScopeFactory.CreateAsyncScope();
-        TUnitOfWork uOw = handlingScope.ServiceProvider.GetRequiredService<TUnitOfWork>();
-
-        InboxMessage? inboxMessage = await uOw.InboxMessagesReadRepository.GetUnprocessedByIdAsync(inboxMessageId);
-
-        if (inboxMessage is null)
+        if (outcome.IsSuccess)
         {
-            return null;
+            outcome = await SaveProcessedAsync(handlingUnitOfWork, inboxMessage, cancellationToken);
         }
 
+        if (outcome.IsSuccess)
+        {
+            return;
+        }
+
+        await RecordFailureAsync(inboxMessageId, outcome.Error!, laneSettings, cancellationToken);
+    }
+
+    private async Task<Result> HandleAsync(
+        IServiceProvider services,
+        InboxMessage inboxMessage,
+        CancellationToken cancellationToken)
+    {
         Result<IIntegrationEvent> integrationEvent = Read(inboxMessage);
 
         if (!integrationEvent.IsSuccess)
         {
-            var unreadable = Result.Failure(integrationEvent.Error!);
-
-            return new HandledInboxMessage(inboxMessage, unreadable);
+            return Result.Failure(integrationEvent.Error!);
         }
 
-        Result outcome = await InvokeHandlersAsync(handlingScope.ServiceProvider, integrationEvent.Value, cancellationToken);
+        Result handled = await InvokeHandlersAsync(services, integrationEvent.Value, cancellationToken);
 
-        return new HandledInboxMessage(inboxMessage, outcome);
+        return handled;
     }
 
     private Result<IIntegrationEvent> Read(InboxMessage inboxMessage)
@@ -123,32 +125,10 @@ public sealed class InboxMessageProcessor<TUnitOfWork>(
         }
     }
 
-    private async Task RecordOutcomeAsync(
-        HandledInboxMessage handledInboxMessage,
-        MessageLaneSettings laneSettings,
+    private async Task<Result> SaveProcessedAsync(
+        TUnitOfWork handlingUnitOfWork,
+        InboxMessage inboxMessage,
         CancellationToken cancellationToken)
-    {
-        await using AsyncServiceScope recordingScope = serviceScopeFactory.CreateAsyncScope();
-        TUnitOfWork uOw = recordingScope.ServiceProvider.GetRequiredService<TUnitOfWork>();
-
-        InboxMessage inboxMessage = handledInboxMessage.InboxMessage;
-        Result outcome = handledInboxMessage.Outcome;
-
-        if (outcome.IsSuccess)
-        {
-            MarkProcessed(uOw, inboxMessage);
-        }
-        else
-        {
-            await RecordFailureAsync(uOw, inboxMessage, outcome.Error!, laneSettings, cancellationToken);
-        }
-
-        await uOw.SaveChangesAsync(cancellationToken);
-    }
-
-    private void MarkProcessed(
-        TUnitOfWork uOw,
-        InboxMessage inboxMessage)
     {
         inboxMessage.Content = ClearedContent;
         inboxMessage.ProcessedOn = time.GetUtcNow();
@@ -156,24 +136,45 @@ public sealed class InboxMessageProcessor<TUnitOfWork>(
         inboxMessage.Error = null;
         inboxMessage.NextRetryOn = null;
 
-        uOw.InboxMessagesWriteRepository.Update(inboxMessage,
+        handlingUnitOfWork.InboxMessagesWriteRepository.Update(inboxMessage,
             x => x.Content,
             x => x.ProcessedOn,
             x => x.ClaimedUntil,
             x => x.Error,
             x => x.NextRetryOn);
 
+        try
+        {
+            await handlingUnitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            return MessageErrors.SaveFailed(exception);
+        }
+
         logger.LogInformation("Processed {Module} inbox message {MessageId}", module.Name, inboxMessage.Id);
+
+        return Result.Success();
     }
 
-    // A Dependency failure is retried with backoff until MaxRetries; any other failure is final.
+    // A Dependency failure is retried with backoff until MaxRetries; any other failure is final. The message is read
+    // again because the handling scope may have changed it before its save failed.
     private async Task RecordFailureAsync(
-        TUnitOfWork uOw,
-        InboxMessage inboxMessage,
+        Guid inboxMessageId,
         Error failure,
         MessageLaneSettings laneSettings,
         CancellationToken cancellationToken)
     {
+        await using AsyncServiceScope recordingScope = serviceScopeFactory.CreateAsyncScope();
+        TUnitOfWork uOw = recordingScope.ServiceProvider.GetRequiredService<TUnitOfWork>();
+
+        InboxMessage? inboxMessage = await uOw.InboxMessagesReadRepository.GetUnprocessedByIdAsync(inboxMessageId);
+
+        if (inboxMessage is null)
+        {
+            return;
+        }
+
         inboxMessage.RetryCount++;
         inboxMessage.Error = failure.Message;
 
@@ -182,11 +183,13 @@ public sealed class InboxMessageProcessor<TUnitOfWork>(
         if (retryable)
         {
             ScheduleRetry(uOw, inboxMessage, laneSettings);
-
-            return;
+        }
+        else
+        {
+            await DeadLetterAsync(uOw, inboxMessage, failure, cancellationToken);
         }
 
-        await DeadLetterAsync(uOw, inboxMessage, failure, cancellationToken);
+        await uOw.SaveChangesAsync(cancellationToken);
     }
 
     private void ScheduleRetry(

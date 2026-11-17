@@ -21,6 +21,7 @@ internal sealed class MessagingHarness(
     {
         Concurrency = 1,
         PollIntervalMilliseconds = 100,
+        MaxPollIntervalMilliseconds = 1_000,
         MaxRetries = 3,
         RetryDelaySeconds = 30
     };
@@ -32,6 +33,50 @@ internal sealed class MessagingHarness(
         provider.GetRequiredService<InboxMessageProcessor<TestUnitOfWork>>();
 
     public static MessagingHarness Build(params RecordingHandler[] handlers)
+    {
+        ServiceCollection services = MessagingServices();
+
+        foreach (RecordingHandler handler in handlers)
+        {
+            services.AddSingleton<IDomainEventHandler<CustomerNotifiedDomainEvent>>(handler);
+            services.AddSingleton<IIntegrationEventHandler<CustomerRegisteredIntegrationEvent>>(handler);
+        }
+
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
+
+        return new MessagingHarness(serviceProvider);
+    }
+
+    // Each handler behind its idempotency decorator, as AddOutbox and AddInbox register them.
+    public static MessagingHarness BuildIdempotent(params RecordingHandler[] handlers)
+    {
+        ServiceCollection services = MessagingServices();
+
+        foreach (RecordingHandler handler in handlers)
+        {
+            services.AddScoped<IDomainEventHandler<CustomerNotifiedDomainEvent>>(serviceProvider =>
+            {
+                TestUnitOfWork uOw = serviceProvider.GetRequiredService<TestUnitOfWork>();
+
+                return new IdempotentDomainEventHandler<CustomerNotifiedDomainEvent, TestUnitOfWork>(handler, uOw);
+            });
+
+            services.AddScoped<IIntegrationEventHandler<CustomerRegisteredIntegrationEvent>>(serviceProvider =>
+            {
+                TestUnitOfWork uOw = serviceProvider.GetRequiredService<TestUnitOfWork>();
+
+                return new IdempotentIntegrationEventHandler<CustomerRegisteredIntegrationEvent, TestUnitOfWork>(
+                    handler,
+                    uOw);
+            });
+        }
+
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
+
+        return new MessagingHarness(serviceProvider);
+    }
+
+    private static ServiceCollection MessagingServices()
     {
         string databaseName = $"messaging-tests-{Guid.CreateVersion7()}";
 
@@ -45,15 +90,7 @@ internal sealed class MessagingHarness(
         services.AddSingleton<OutboxMessageProcessor<TestUnitOfWork>>();
         services.AddSingleton<InboxMessageProcessor<TestUnitOfWork>>();
 
-        foreach (RecordingHandler handler in handlers)
-        {
-            services.AddSingleton<IDomainEventHandler<CustomerNotifiedDomainEvent>>(handler);
-            services.AddSingleton<IIntegrationEventHandler<CustomerRegisteredIntegrationEvent>>(handler);
-        }
-
-        ServiceProvider serviceProvider = services.BuildServiceProvider();
-
-        return new MessagingHarness(serviceProvider);
+        return services;
     }
 
     public async Task<OutboxMessage> WriteOutboxMessageAsync(
@@ -117,6 +154,12 @@ internal sealed class MessagingHarness(
     public Task<DeadLetteredInboxMessage?> DeadLetteredInboxMessageAsync(Guid id) =>
         QueryAsync(db => db.Set<DeadLetteredInboxMessage>().AsNoTracking()
             .SingleOrDefaultAsync(message => message.Id == id));
+
+    public Task<bool> OutboxMessageHandledAsync(Guid id) =>
+        QueryAsync(db => db.Set<OutboxMessageConsumer>().AnyAsync(consumer => consumer.OutboxMessageId == id));
+
+    public Task<bool> InboxMessageHandledAsync(Guid id) =>
+        QueryAsync(db => db.Set<InboxMessageConsumer>().AnyAsync(consumer => consumer.InboxMessageId == id));
 
     public async Task<TResult> InScopeAsync<TResult>(Func<TestUnitOfWork, Task<TResult>> work)
     {

@@ -12,5 +12,7 @@ public interface IInboxMessageRepository
 
     Task<InboxMessage?> GetUnprocessedByIdAsync(Guid id);
 
-    Task<int> DeleteProcessedBeforeAsync(DateTimeOffset cutoff);
+    Task<int> DeleteProcessedBeforeAsync(
+        DateTimeOffset cutoff,
+        int batchSize);
 }

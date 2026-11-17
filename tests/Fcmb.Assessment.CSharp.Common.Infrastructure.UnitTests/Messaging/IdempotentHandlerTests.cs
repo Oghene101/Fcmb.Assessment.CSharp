@@ -46,6 +46,18 @@ public sealed class IdempotentHandlerTests
     }
 
     [Fact]
+    public async Task ADomainEvent_IsHandledAgain_WhenItsHandledRecordWasNeverSaved()
+    {
+        var handler = new RecordingHandler();
+        await using var harness = MessagingHarness.Build();
+
+        await HandleDomainEventWithoutSavingAsync(harness, handler);
+        await HandleDomainEventWithoutSavingAsync(harness, handler);
+
+        handler.Calls.ShouldBe(2);
+    }
+
+    [Fact]
     public async Task AnIntegrationEvent_IsHandledOnce_HoweverOftenItIsDelivered()
     {
         var handler = new RecordingHandler();
@@ -73,17 +85,42 @@ public sealed class IdempotentHandlerTests
         failingHandler.Calls.ShouldBe(2);
     }
 
+    // Saves afterwards, as the message processor does with the message's outcome.
     private static Task<Result> HandleDomainEventAsync(
+        MessagingHarness harness,
+        RecordingHandler handler) =>
+        harness.InScopeAsync(async uOw =>
+        {
+            var idempotentHandler =
+                new IdempotentDomainEventHandler<CustomerNotifiedDomainEvent, TestUnitOfWork>(handler, uOw);
+
+            Result handled = await idempotentHandler.Handle(CustomerNotified, Token);
+
+            await uOw.SaveChangesAsync(Token);
+
+            return handled;
+        });
+
+    private static Task<Result> HandleDomainEventWithoutSavingAsync(
         MessagingHarness harness,
         RecordingHandler handler) =>
         harness.InScopeAsync(uOw =>
             new IdempotentDomainEventHandler<CustomerNotifiedDomainEvent, TestUnitOfWork>(handler, uOw)
                 .Handle(CustomerNotified, Token));
 
+    // Saves afterwards, as the message processor does with the message's outcome.
     private static Task<Result> HandleIntegrationEventAsync(
         MessagingHarness harness,
         RecordingHandler handler) =>
-        harness.InScopeAsync(uOw =>
-            new IdempotentIntegrationEventHandler<CustomerRegisteredIntegrationEvent, TestUnitOfWork>(handler, uOw)
-                .Handle(CustomerRegistered, Token));
+        harness.InScopeAsync(async uOw =>
+        {
+            var idempotentHandler =
+                new IdempotentIntegrationEventHandler<CustomerRegisteredIntegrationEvent, TestUnitOfWork>(handler, uOw);
+
+            Result handled = await idempotentHandler.Handle(CustomerRegistered, Token);
+
+            await uOw.SaveChangesAsync(Token);
+
+            return handled;
+        });
 }

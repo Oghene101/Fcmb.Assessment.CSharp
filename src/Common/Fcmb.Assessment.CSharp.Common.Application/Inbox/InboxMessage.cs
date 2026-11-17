@@ -10,6 +10,9 @@ public sealed class InboxMessage
     public DateTimeOffset? ProcessedOn { get; set; }
     public DateTimeOffset? NextRetryOn { get; set; }
 
+    // When the message may next be claimed: its retry time, else when it occurred. Computed by the database.
+    public DateTimeOffset AvailableOn { get; init; }
+
     // While set and in the future, one processor holds the message; once it lapses another may claim it.
     public DateTimeOffset? ClaimedUntil { get; set; }
 

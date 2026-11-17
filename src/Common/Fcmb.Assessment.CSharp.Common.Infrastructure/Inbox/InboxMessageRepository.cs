@@ -24,9 +24,9 @@ public sealed class InboxMessageRepository(
                           FROM {schema}.InboxMessages WITH (UPDLOCK, READPAST, ROWLOCK)
                           WHERE Lane = @lane
                             AND ProcessedOn IS NULL
-                            AND (NextRetryOn IS NULL OR NextRetryOn <= @now)
+                            AND AvailableOn <= @now
                             AND (ClaimedUntil IS NULL OR ClaimedUntil < @now)
-                          ORDER BY OccurredOn)
+                          ORDER BY AvailableOn)
                       UPDATE Claimable
                       SET ClaimedUntil = @claimedUntil
                       OUTPUT inserted.Id
@@ -60,8 +60,11 @@ public sealed class InboxMessageRepository(
         return inboxMessage;
     }
 
-    // Messages and their consumer records go together, so a consumer record never outlives its message.
-    public async Task<int> DeleteProcessedBeforeAsync(DateTimeOffset cutoff)
+    // Messages and their consumer records go together, so a consumer record never outlives its message. A batch per
+    // call keeps each transaction and its locks small, even after a backlog of a few million rows.
+    public async Task<int> DeleteProcessedBeforeAsync(
+        DateTimeOffset cutoff,
+        int batchSize)
     {
         string sql = $"""
                       SET XACT_ABORT ON;
@@ -69,9 +72,11 @@ public sealed class InboxMessageRepository(
 
                       DECLARE @Purged TABLE (Id uniqueidentifier PRIMARY KEY);
 
-                      DELETE FROM {schema}.InboxMessages
+                      DELETE TOP (@batchSize) FROM {schema}.InboxMessages
                       OUTPUT deleted.Id INTO @Purged
-                      WHERE ProcessedOn < @cutoff;
+                      -- Repeats the processed index's filter, which a parameterised cutoff alone does not match.
+                      WHERE ProcessedOn IS NOT NULL
+                        AND ProcessedOn < @cutoff;
 
                       DELETE FROM {schema}.InboxMessageConsumers
                       WHERE InboxMessageId IN (SELECT Id FROM @Purged);
@@ -83,7 +88,7 @@ public sealed class InboxMessageRepository(
 
         int purgedMessages = await connection.ExecuteScalarAsync<int>(
             sql,
-            new { cutoff },
+            new { cutoff, batchSize },
             transaction);
 
         return purgedMessages;

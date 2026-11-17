@@ -5,6 +5,7 @@ using Fcmb.Assessment.CSharp.Common.Domain;
 
 namespace Fcmb.Assessment.CSharp.Common.Infrastructure.Inbox;
 
+// The handled-record is saved by InboxMessageProcessor together with the message's outcome, sparing a commit per handler.
 public sealed class IdempotentIntegrationEventHandler<TIntegrationEvent, TUnitOfWork>(
     IIntegrationEventHandler<TIntegrationEvent> decorated,
     TUnitOfWork uOw)
@@ -37,8 +38,6 @@ public sealed class IdempotentIntegrationEventHandler<TIntegrationEvent, TUnitOf
                 integrationEvent.Id,
                 consumerName),
             cancellationToken);
-
-        await uOw.SaveChangesAsync(cancellationToken);
 
         return handled;
     }

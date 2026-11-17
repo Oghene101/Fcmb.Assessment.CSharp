@@ -45,7 +45,7 @@ Each module follows Clean Architecture layering and owns its own `DbContext` and
 3. An outbox lane processor claims outbox messages with a lease and dispatches them to domain event handlers, which publish integration events through MassTransit to the `domain-events-topic`.
 4. Consumers write incoming events to the receiving module's inbox, and an inbox lane processor hands them to idempotent integration event handlers.
 
-Each module splits its outbox and inbox into lanes, each with its own concurrency, poll interval and retries. A handler failure of type `Dependency`, or an exception, is retried with exponential backoff; any other failure is dead-lettered at once. Processed messages keep no content and are purged after `RetentionDays`. You configure all of this per module in `modules.<name>.json`.
+Each module splits its outbox and inbox into lanes, each with its own concurrency, poll interval and retries. An idle lane doubles its wait after every empty claim up to `MaxPollIntervalMilliseconds`, and a message saved in the same instance wakes its lane at once. A handler failure of type `Dependency`, or an exception, is retried with exponential backoff; any other failure is dead-lettered at once. Processed messages keep no content and are purged after `RetentionDays`. You configure all of this per module in `modules.<name>.json`.
 
 ## Prerequisites
 

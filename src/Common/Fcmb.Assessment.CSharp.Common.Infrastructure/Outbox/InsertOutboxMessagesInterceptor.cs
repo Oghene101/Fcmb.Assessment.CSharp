@@ -1,3 +1,4 @@
+using Fcmb.Assessment.CSharp.Common.Application.Data;
 using Fcmb.Assessment.CSharp.Common.Application.Outbox;
 using Fcmb.Assessment.CSharp.Common.Domain;
 using Fcmb.Assessment.CSharp.Common.Infrastructure.Serialization;
@@ -7,8 +8,10 @@ using Newtonsoft.Json;
 
 namespace Fcmb.Assessment.CSharp.Common.Infrastructure.Outbox;
 
-public sealed class InsertOutboxMessagesInterceptor(
-    Func<IDomainEvent, string> laneOf) : SaveChangesInterceptor
+public sealed class InsertOutboxMessagesInterceptor<TUnitOfWork>(
+    Func<IDomainEvent, string> laneOf,
+    OutboxWakeUps<TUnitOfWork> wakeUps) : SaveChangesInterceptor
+    where TUnitOfWork : ICommonUnitOfWork
 {
     public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
         DbContextEventData eventData,
@@ -21,6 +24,40 @@ public sealed class InsertOutboxMessagesInterceptor(
         }
 
         return await base.SavingChangesAsync(eventData, result, cancellationToken);
+    }
+
+    public override async ValueTask<int> SavedChangesAsync(
+        SaveChangesCompletedEventData eventData,
+        int result,
+        CancellationToken cancellationToken = default)
+    {
+        if (eventData.Context is not null)
+        {
+            WakeUpLanesOfNewMessages(eventData.Context);
+        }
+
+        return await base.SavedChangesAsync(eventData, result, cancellationToken);
+    }
+
+    // A message being processed carries a lease, a retried one a retry time; only a new message has neither.
+    private void WakeUpLanesOfNewMessages(DbContext context)
+    {
+        string[] lanesOfNewMessages =
+        [
+            .. context.ChangeTracker
+                .Entries<OutboxMessage>()
+                .Select(entry => entry.Entity)
+                .Where(message => message.ProcessedOn == null
+                                  && message.ClaimedUntil == null
+                                  && message.NextRetryOn == null)
+                .Select(message => message.Lane)
+                .Distinct()
+        ];
+
+        foreach (string lane in lanesOfNewMessages)
+        {
+            wakeUps.WakeUp(lane);
+        }
     }
 
     private void InsertOutboxMessages(DbContext context)

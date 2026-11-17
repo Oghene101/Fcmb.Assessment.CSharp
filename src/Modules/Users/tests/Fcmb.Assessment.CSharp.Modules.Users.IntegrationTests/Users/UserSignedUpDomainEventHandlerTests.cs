@@ -1,6 +1,7 @@
 using Fcmb.Assessment.CSharp.Common.Application.Messaging;
 using Fcmb.Assessment.CSharp.Common.Application.Outbox;
 using Fcmb.Assessment.CSharp.Common.Domain;
+using Fcmb.Assessment.CSharp.Modules.Users.Application.Data;
 using Fcmb.Assessment.CSharp.Modules.Users.Domain.Users;
 using Fcmb.Assessment.CSharp.Modules.Users.IntegrationEvents;
 using Fcmb.Assessment.CSharp.Modules.Users.IntegrationTests.Abstractions;
@@ -110,6 +111,7 @@ public sealed class UserSignedUpDomainEventHandlerTests(
         publications.ShouldBeEmpty();
     }
 
+    // A success is saved with its handled-record, as the outbox processor does.
     private async Task<Result> HandleInItsOwnScopeAsync(UserSignedUpDomainEvent domainEvent)
     {
         await using AsyncServiceScope scope = ServiceProvider.CreateAsyncScope();
@@ -117,7 +119,16 @@ public sealed class UserSignedUpDomainEventHandlerTests(
         IDomainEventHandler<UserSignedUpDomainEvent> handler =
             scope.ServiceProvider.GetRequiredService<IDomainEventHandler<UserSignedUpDomainEvent>>();
 
-        return await handler.Handle(domainEvent, CancellationToken);
+        IUnitOfWork uOw = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+
+        Result handled = await handler.Handle(domainEvent, CancellationToken);
+
+        if (handled.IsSuccess)
+        {
+            await uOw.SaveChangesAsync(CancellationToken);
+        }
+
+        return handled;
     }
 
     private static UserSignedUpDomainEvent NewUserSignedUpDomainEvent(DomainUserType userType)

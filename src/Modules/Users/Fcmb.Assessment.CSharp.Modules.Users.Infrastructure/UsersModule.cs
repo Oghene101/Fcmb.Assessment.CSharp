@@ -66,14 +66,24 @@ public static class UsersModule
             services.AddScoped<IClaimsProvider, ClaimsProvider>();
 
             services.AddDbContext<UsersDbContext>((sp, options) =>
+            {
+                string? databaseConnectionString = configuration.GetConnectionString("Database");
+
+                OutboxWakeUps<IUnitOfWork> outboxWakeUps = sp.GetRequiredService<OutboxWakeUps<IUnitOfWork>>();
+
+                var insertOutboxMessagesInterceptor =
+                    new InsertOutboxMessagesInterceptor<IUnitOfWork>(OutboxLanes.Of, outboxWakeUps);
+
+                InsertAuditLogsInterceptor insertAuditLogsInterceptor =
+                    sp.GetRequiredService<InsertAuditLogsInterceptor>();
+
                 options
                     .UseSqlServer(
-                        configuration.GetConnectionString("Database"),
+                        databaseConnectionString,
                         sqlServerOptions => sqlServerOptions
                             .MigrationsHistoryTable(HistoryRepository.DefaultTableName, Schemas.Users))
-                    .AddInterceptors(
-                        new InsertOutboxMessagesInterceptor(OutboxLanes.Of),
-                        sp.GetRequiredService<InsertAuditLogsInterceptor>()));
+                    .AddInterceptors(insertOutboxMessagesInterceptor, insertAuditLogsInterceptor);
+            });
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();
         }

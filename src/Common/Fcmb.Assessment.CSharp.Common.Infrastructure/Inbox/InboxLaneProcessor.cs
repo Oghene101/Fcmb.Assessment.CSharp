@@ -9,10 +9,13 @@ namespace Fcmb.Assessment.CSharp.Common.Infrastructure.Inbox;
 
 // One per lane: claims only as many messages as it has free slots and refills a slot as soon as its message
 // finishes. Every instance claims from the same table with READPAST, and a lapsed lease lets another take over.
+// An idle lane doubles its wait after each empty claim up to MaxPollIntervalMilliseconds, unless a message saved in
+// this instance wakes it first.
 public sealed class InboxLaneProcessor<TUnitOfWork>(
     MessageLane lane,
     IServiceScopeFactory serviceScopeFactory,
     InboxMessageProcessor<TUnitOfWork> messageProcessor,
+    InboxWakeUps<TUnitOfWork> wakeUps,
     TimeProvider time,
     ILogger<InboxLaneProcessor<TUnitOfWork>> logger) : BackgroundService
     where TUnitOfWork : ICommonUnitOfWork
@@ -20,6 +23,9 @@ public sealed class InboxLaneProcessor<TUnitOfWork>(
     private const int ClaimFailureBackoffSeconds = 5;
 
     private readonly SemaphoreSlim _freeSlots = new(lane.Settings.Concurrency, lane.Settings.Concurrency);
+    private readonly TimeSpan _pollInterval = TimeSpan.FromMilliseconds(lane.Settings.PollIntervalMilliseconds);
+    private readonly TimeSpan _maxPollInterval = TimeSpan.FromMilliseconds(lane.Settings.MaxPollIntervalMilliseconds);
+    private TimeSpan _idleWait = TimeSpan.FromMilliseconds(lane.Settings.PollIntervalMilliseconds);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -51,7 +57,13 @@ public sealed class InboxLaneProcessor<TUnitOfWork>(
 
                 if (claim.ClaimedIds.Count == 0)
                 {
-                    await WaitAsync(claim.WaitBeforeNextClaim, stoppingToken);
+                    bool wokenUp = await wakeUps.WaitAsync(lane.Name, claim.WaitBeforeNextClaim, time, stoppingToken);
+
+                    _idleWait = wokenUp ? _pollInterval : DoubledIdleWait();
+                }
+                else
+                {
+                    _idleWait = _pollInterval;
                 }
             }
         }
@@ -75,8 +87,6 @@ public sealed class InboxLaneProcessor<TUnitOfWork>(
         int limit,
         CancellationToken cancellationToken)
     {
-        var pollInterval = TimeSpan.FromMilliseconds(lane.Settings.PollIntervalMilliseconds);
-
         var claimFailureBackoff = TimeSpan.FromSeconds(ClaimFailureBackoffSeconds);
 
         try
@@ -88,14 +98,14 @@ public sealed class InboxLaneProcessor<TUnitOfWork>(
 
             DateTimeOffset claimedUntil = now.AddSeconds(lane.LeaseSeconds);
 
-            // An idle lane polls several times a second; tracing each empty poll would export nothing useful.
+            // Every lane claims around the clock, mostly finding nothing; tracing each claim would export nothing useful.
             using IDisposable quietClaim = SuppressInstrumentationScope.Begin();
 
             cancellationToken.ThrowIfCancellationRequested();
 
             Guid[] claimedIds = await uOw.InboxMessagesReadRepository.ClaimAsync(lane.Name, limit, now, claimedUntil);
 
-            return new ClaimOutcome(claimedIds, pollInterval);
+            return new ClaimOutcome(claimedIds, _idleWait);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
@@ -126,17 +136,10 @@ public sealed class InboxLaneProcessor<TUnitOfWork>(
         }
     }
 
-    private async Task WaitAsync(
-        TimeSpan wait,
-        CancellationToken stoppingToken)
+    private TimeSpan DoubledIdleWait()
     {
-        try
-        {
-            await Task.Delay(wait, time, stoppingToken);
-        }
-        catch (OperationCanceledException)
-        {
-            // Stopping: the loop condition ends the lane.
-        }
+        TimeSpan doubledIdleWait = _idleWait * 2;
+
+        return doubledIdleWait < _maxPollInterval ? doubledIdleWait : _maxPollInterval;
     }
 }
