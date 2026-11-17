@@ -1,6 +1,6 @@
 using Fcmb.Assessment.CSharp.Api.Extensions;
+using Fcmb.Assessment.CSharp.Api.Infrastructure.Observability;
 using Fcmb.Assessment.CSharp.Api.Middleware;
-using Fcmb.Assessment.CSharp.Api.OpenTelemetry;
 using Fcmb.Assessment.CSharp.Common.Application;
 using Fcmb.Assessment.CSharp.Common.Infrastructure;
 using Fcmb.Assessment.CSharp.Common.Presentation.Extensions;

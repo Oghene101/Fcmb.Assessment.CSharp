@@ -1,4 +1,4 @@
-namespace Fcmb.Assessment.CSharp.Gateway.OpenTelemetry;
+namespace Fcmb.Assessment.CSharp.Gateway.Infrastructure.Observability;
 
 #pragma warning disable CA1515
 public static class DiagnosticsConfig

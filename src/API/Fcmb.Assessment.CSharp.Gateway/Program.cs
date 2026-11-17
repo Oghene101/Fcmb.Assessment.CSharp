@@ -1,6 +1,6 @@
 using Fcmb.Assessment.CSharp.Gateway.Authentication;
 using Fcmb.Assessment.CSharp.Gateway.Middleware;
-using Fcmb.Assessment.CSharp.Gateway.OpenTelemetry;
+using Fcmb.Assessment.CSharp.Gateway.Infrastructure.Observability;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Serilog;
