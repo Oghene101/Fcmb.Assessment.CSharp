@@ -8,7 +8,9 @@ using Serilog;
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Host.UseSerilog((context, loggerConfiguration) =>
-    loggerConfiguration.ReadFrom.Configuration(context.Configuration));
+    loggerConfiguration
+        .ReadFrom.Configuration(context.Configuration)
+        .WriteToOtlpCollector(context.Configuration));
 
 builder.Services.AddServiceDiscovery();
 

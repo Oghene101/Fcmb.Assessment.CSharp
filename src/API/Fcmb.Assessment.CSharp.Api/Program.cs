@@ -15,7 +15,9 @@ using AssemblyReference = Fcmb.Assessment.CSharp.Modules.Users.Application.Assem
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Host.UseSerilog((context, loggerConfiguration) =>
-    loggerConfiguration.ReadFrom.Configuration(context.Configuration));
+    loggerConfiguration
+        .ReadFrom.Configuration(context.Configuration)
+        .WriteToOtlpCollector(context.Configuration));
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
