@@ -1,6 +1,7 @@
 using Fcmb.Assessment.CSharp.Common.Infrastructure.AuditLog;
 using Fcmb.Assessment.CSharp.Common.Infrastructure.Authentication;
 using Fcmb.Assessment.CSharp.Common.Infrastructure.Configurations;
+using Fcmb.Assessment.CSharp.Common.Infrastructure.Messaging;
 using MassTransit;
 using MassTransit.AzureServiceBusTransport;
 using MassTransit.Logging;
@@ -63,7 +64,7 @@ public static class InfrastructureConfiguration
 
                 configurator.UsingAzureServiceBus((context, busFactoryConfigurator) =>
                 {
-                    busFactoryConfigurator.Host(messageBrokerConnectionString);
+                    busFactoryConfigurator.UseServiceBusHost(messageBrokerConnectionString);
 
                     foreach (Action<IServiceBusBusFactoryConfigurator> configureTopology in moduleConfigureTopology)
                     {

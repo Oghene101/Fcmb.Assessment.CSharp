@@ -22,8 +22,6 @@ public abstract class BaseIntegrationTest : IAsyncDisposable
     {
         _factory = factory;
 
-        factory.StartBus();
-
         _scope = factory.Services.CreateAsyncScope();
 
         HttpClient = factory.CreateClient(new WebApplicationFactoryClientOptions

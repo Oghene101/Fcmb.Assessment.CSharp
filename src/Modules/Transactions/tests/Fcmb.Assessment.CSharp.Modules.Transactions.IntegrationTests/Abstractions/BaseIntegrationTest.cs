@@ -23,8 +23,6 @@ public abstract class BaseIntegrationTest : IAsyncDisposable
     {
         _factory = factory;
 
-        factory.StartBus();
-
         _scope = factory.Services.CreateAsyncScope();
 
         HttpClient = factory.CreateClient(new WebApplicationFactoryClientOptions
@@ -89,10 +87,10 @@ public abstract class BaseIntegrationTest : IAsyncDisposable
         var noWaiting = new CancellationToken(canceled: true);
 
         IEnumerable<IReceivedMessage<TMessage>> consumed = Harness.Consumed.Select<TMessage>(
-            candidate => candidate.Message is TMessage message && isExpected(message),
+            candidate => isExpected(candidate.Context.Message),
             noWaiting);
 
-        return [.. consumed.Select(received => received.Message).OfType<TMessage>()];
+        return [.. consumed.Select(received => received.Context.Message)];
     }
 
     public async ValueTask DisposeAsync()

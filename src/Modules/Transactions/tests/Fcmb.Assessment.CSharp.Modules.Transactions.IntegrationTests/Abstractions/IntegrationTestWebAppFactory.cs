@@ -1,6 +1,5 @@
 using Fcmb.Assessment.CSharp.Modules.Users.Application.Integrations.KeyCloak;
 using MassTransit;
-using MassTransit.Monitoring;
 using MassTransit.Testing;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -29,8 +28,6 @@ public sealed class IntegrationTestWebAppFactory : WebApplicationFactory<Program
     private static readonly string RealmExportPath =
         Path.Combine(AppContext.BaseDirectory, KeycloakRealm.ExportFileName);
 
-    private static readonly TimeSpan BusStartTimeout = TimeSpan.FromSeconds(30);
-
     // Long enough to outlast a whole run; each test bounds its own waits instead.
     private static readonly TimeSpan HarnessTimeout = TimeSpan.FromMinutes(30);
 
@@ -43,10 +40,6 @@ public sealed class IntegrationTestWebAppFactory : WebApplicationFactory<Program
             new FileInfo(KeycloakRealm.ImportPath))
         .WithCommand("--import-realm")
         .Build();
-
-    private readonly Lock _busLock = new();
-
-    private IBusControl? _bus;
 
     private string _keycloakBaseUrl = string.Empty;
 
@@ -66,41 +59,12 @@ public sealed class IntegrationTestWebAppFactory : WebApplicationFactory<Program
         KeycloakTokenUri = new Uri($"{RealmUrl}/protocol/openid-connect/token");
     }
 
-    // MassTransit waives its licence only for a bus built from a test runner's call stack. The host starts on
-    // WebApplicationFactory's own entry-point thread, so the bus is built here, from a test's constructor.
-    public void StartBus()
-    {
-        lock (_busLock)
-        {
-            if (_bus is null)
-            {
-                IBusControl bus = Services.GetRequiredService<IBusControl>();
-
-                bus.Start(BusStartTimeout);
-
-                _bus = bus;
-            }
-        }
-    }
-
     public override async ValueTask DisposeAsync()
     {
-        await StopBusAsync();
-
         await base.DisposeAsync();
 
         await _keycloakContainer.DisposeAsync();
         await _databaseContainer.DisposeAsync();
-    }
-
-    private async Task StopBusAsync()
-    {
-        if (_bus is null)
-        {
-            return;
-        }
-
-        await _bus.StopAsync(CancellationToken.None);
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -132,19 +96,6 @@ public sealed class IntegrationTestWebAppFactory : WebApplicationFactory<Program
                 options.TestTimeout = HarnessTimeout;
                 options.TestInactivityTimeout = HarnessTimeout;
             });
-
-            services.RemoveHostedService<MassTransitHostedService>();
-
-            ServiceDescriptor[] busHealthChecks =
-            [
-                .. services.Where(descriptor =>
-                    descriptor.ImplementationType == typeof(ConfigureBusHealthCheckServiceOptions))
-            ];
-
-            foreach (ServiceDescriptor busHealthCheck in busHealthChecks)
-            {
-                services.Remove(busHealthCheck);
-            }
 
             // UsersModule captures KeyCloak:BaseUrl while registering, before the test settings above apply.
             services.Configure<HttpClientFactoryOptions>(keycloakClientName, options =>

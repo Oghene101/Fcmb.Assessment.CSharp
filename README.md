@@ -22,7 +22,7 @@ A modular-monolith banking API built on **.NET 11** and orchestrated locally wit
 
 ```
 Orchestration/
-  Fcmb.Assessment.CSharp.Api.AppHost/   Aspire host: Keycloak, Service Bus emulator, API
+  Fcmb.Assessment.CSharp.Api.AppHost/   Aspire host: SQL Server, Keycloak, Service Bus emulator, API
 src/
   API/
     Fcmb.Assessment.CSharp.Api/         Composition root: Program.cs, middleware, OpenAPI, migrations
@@ -50,8 +50,7 @@ Each module splits its outbox and inbox into lanes, each with its own concurrenc
 ## Prerequisites
 
 - [.NET 11 SDK](https://dotnet.microsoft.com/download)
-- Docker (for the Keycloak and Azure Service Bus emulator containers)
-- A reachable SQL Server instance (the AppHost does **not** provision one)
+- Docker (for the SQL Server, Keycloak and Azure Service Bus emulator containers)
 - Optional: the Aspire CLI (`dotnet tool install -g aspire.cli`)
 
 ## Getting started
@@ -62,9 +61,6 @@ Set these values in `src/API/Fcmb.Assessment.CSharp.Api/appsettings.Development.
 
 ```jsonc
 {
-  "ConnectionStrings": {
-    "Database": "Server=localhost,1433;Database=FcmbAssessment;User Id=sa;Password=<pwd>;TrustServerCertificate=True"
-  },
   "Authentication": {
     "Audience": "account",
     "MetadataAddress": "http://localhost:8080/realms/fcmb-assessment-csharp/.well-known/openid-configuration",
@@ -84,7 +80,7 @@ Set these values in `src/API/Fcmb.Assessment.CSharp.Api/appsettings.Development.
 }
 ```
 
-Aspire injects the Service Bus connection string (`ConnectionStrings:azureservicebus`) automatically.
+Aspire injects the SQL Server (`ConnectionStrings:Database`) and Service Bus (`ConnectionStrings:azureservicebus`) connection strings automatically. Set `ConnectionStrings:Database` yourself only when running the API without the AppHost.
 
 ### 2. Set up Keycloak
 
@@ -98,7 +94,7 @@ The Aspire dashboard shows the Keycloak admin credentials under the `keycloak` r
 ### 3. Run
 
 ```bash
-# Through Aspire (recommended): starts Keycloak, Service Bus emulator and the API
+# Through Aspire (recommended): starts SQL Server, Keycloak, Service Bus emulator and the API
 dotnet run --project Orchestration/Fcmb.Assessment.CSharp.Api.AppHost
 # or
 aspire run
@@ -198,4 +194,3 @@ This is still in progress:
 - `TransferUseCase.Handler` only records a `Transaction`. It doesn't yet debit or credit accounts or apply rewards.
 - `UserSignedUpIntegrationEventHandler` in the Transactions module (which creates the customer, account and reward) throws `NotImplementedException`.
 - Keycloak admin tokens aren't cached yet, so each admin call fetches a new token.
-- The AppHost doesn't provision SQL Server, so you must supply it separately.
